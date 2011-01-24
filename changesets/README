@@ -1,0 +1,18 @@
+# Tab separated list of changesets
+#
+# Required values are:
+# 1 Which chromosome?
+# 2 Start position of that chromosome
+# 3 End position of that chromosome
+# 4 Change that is to be made:
+#	S = Substitution followed by '-' and the base to replace with
+#	D = Deletion
+#	I = Insertion followed by '-' and the base/s to be inserted
+#
+#Example
+#Chr	Start		End			Change
+
+chr13	31787362	31787363	S-A
+chr13	31790576	31790577	D
+chr13	31819167	31819167	I-TTATAAAAT
+
