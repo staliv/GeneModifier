@@ -1,3 +1,4 @@
 /chromosomes/*
 /genes/*
 !.gitignore
+!README

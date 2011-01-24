@@ -3,68 +3,53 @@
 var fs = require("fs");
 var http = require("http");
 var path = require("path");
+var geneFetcher = require("./GeneFetcher");
 
-getGeneLocation("BRCA2");
+//Accepts the name of the gene and changeset from command line
+if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 16, process.argv[1].length) == "/GeneModifier.js") {
+	if (process.argv.length <= 3) {
+		console.log("Example usage: 'node GeneModifier.js geneName changeSetName'");
+	}
+	else {
+		modifyGene(process.argv[process.argv.length - 2], process.argv[process.argv.length - 1], function(error, message) {
+			if (error) {
+				console.log(error.message);
+				return;
+			}
+			console.log(message);
+		});
+	}
+}
 
-function outputGene(geneData) {
-	var geneName = geneData['value'];
-	var genePosition = geneData['id'];
-	var chromosomeName = genePosition.replace(/,/g, '').split(':')[0];
-	var chromosomeFilePath = "./chromosomes/" + chromosomeName + ".fa";
-	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]);
-	var end = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[1]);
+//Returns callback(error, message)
+function modifyGene(geneName, changeSetName) {
 
-	//Add expected number of line breaks - defaulting to 50 characters per line
-	start += getNrOfLineBreaks(start);
-	end += getNrOfLineBreaks(end);
+	var callback = arguments[arguments.length - 1];
+	if (typeof(callback) !== 'function') callback = function(){};
 	
-	var fastaDescriptionLength = (">" + chromosomeName).length;
+	//Return with error if arguments are not correctly passed
+	if (!geneName || !changeSetName) return callback(new Error("Missing name of gene or changeSet"));
 	
-	//TODO: Check if gene exists, if not then download
-	path.exists(chromosomeFilePath, function (exists) {
-		if (exists) {
-			var output = fs.createWriteStream("./genes/" + geneName + ".fa", {encoding: 'utf8'});
-			fs.createReadStream(chromosomeFilePath, {
-				'bufferSize': 4 * 1024, 'start': start + fastaDescriptionLength, 'end': end + fastaDescriptionLength
-			}).pipe(output)
+	//Does gene already exist?
+	path.exists("./genes/" + geneName.toUpperCase() + ".fa", function (exists) {
+		if (!exists) {
+			//Otherwise fetch gene
+			geneFetcher.fetchGene(geneName, function(error, filePath) {
+				if (error) return callback(error);
+				//Try again with the same callback
+				modifyGene(path.basename(filePath, ".fa"), changeSetName, callback);
+			});
 		}
 		else {
-			throw new Error(chromosomeFilePath + " - path does not exist.");
+			//Does changeSet exist?
+			path.exists("./changesets/" + changeSetName, function (exists) {
+				if (!exists) {
+					return callback(new Error("ChangeSet " + path.resolve("./changesets/" + changeSetName) + " does not exist."));
+				}
+				callback(null, "Success!");
+			});
 		}
+		
 	});
-
 	
-	
-}
-
-function getNrOfLineBreaks(number, charsPerLine) {
-	charsPerLine = (charsPerLine === undefined) ? 50: charsPerLine;
-	var result = Math.floor(number/charsPerLine);
-
-	((number % charsPerLine) === 0) ? --result : '';
-
-	return result;
-}
-
-function getGeneLocation(geneName) {  
-	var options = {
-	  host: 'genome.ucsc.edu',
-	  port: 80,
-	  path: "/cgi-bin/hgSuggest?db=hg18&prefix=" + geneName
-	};
-
-	http.get(options, function(result) {
-		var body = "";
-		result.on('data', function(chunk) {
-			body += chunk;
-		});
-		result.on('end', function() {
-			var geneLocations = JSON.parse(body);
-			if (geneLocations.length > 0) {
-				outputGene(geneLocations[0]);
-			}
-		})
-	}).on('error', function(error) {
-		console.log("Got error: " + error.message);
-	});
 }

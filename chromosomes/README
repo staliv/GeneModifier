@@ -1,0 +1,6 @@
+#Example to get chromosome 13
+curl -O http://hgdownload.cse.ucsc.edu/goldenPath/hg18/chromosomes/chr13.fa.gz
+
+#Then use gunzip to extract the fasta-file
+gunzip chr13.fa.gz
+
