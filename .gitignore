@@ -1,4 +1,6 @@
 /chromosomes/*
 /genes/*
+/changesets/*
+!/changesets/test.cs
 !.gitignore
 !README

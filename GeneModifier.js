@@ -46,7 +46,7 @@ function modifyGene(geneName, changeSetName) {
 				if (!exists) {
 					return callback(new Error("ChangeSet " + path.resolve("./changesets/" + changeSetName) + " does not exist."));
 				}
-				callback(null, "Success!");
+				callback(null, "GeneModifier has no logic for outputting the modified gene yet.");
 			});
 		}
 		

@@ -113,10 +113,17 @@ function getGeneLocation(geneName) {
 		});
 		result.on('end', function() {
 			var geneLocations = JSON.parse(body);
-			if (geneLocations.length > 0) {
+			if (geneLocations.length == 1) {
 				console.log("Fetched gene information from " + options.host + " :");
-				console.dir(geneLocations);
+				
 				callback(null, geneLocations[0]);
+			}
+			else if (geneLocations.length > 1) {
+				console.dir(geneLocations);
+				return callback(new Error("Found multiple genes matching '" + geneName + "' from " + options.host + ". \nPlease specify one of them from the list above."));
+			}
+			else {
+				return callback(new Error("Could not find a matching gene named '" + geneName + "' from " + options.host + "."));
 			}
 		})
 	}).on('error', function(error) {
