@@ -1,6 +1,10 @@
 /chromosomes/*
 /genes/*
 /changesets/*
+
+# Only in the test.cs ChangeSet
 !/changesets/test.cs
+
+# Always include .gitignore and README files 
 !.gitignore
 !README
