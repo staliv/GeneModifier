@@ -30,7 +30,7 @@ function modifyGene(geneName, changeSetName) {
 	//Return with error if arguments are not correctly passed
 	if (!geneName || !changeSetName) return callback(new Error("Missing name of gene or changeSet"));
 
-	//TODO: Rewrite according to this pattern: 
+	//TODO: Rewrite according to async pattern 
 	var genePath = "./genes/" + geneName.toUpperCase() + ".fa",
 		changeSetPath = "./changesets/" + changeSetName;
 	
@@ -51,10 +51,11 @@ function modifyGene(geneName, changeSetName) {
 					return callback(new Error("ChangeSet " + path.resolve("./changesets/" + changeSetName) + " does not exist."));
 				}
 				mergeGeneAndChangeSet(genePath, changeSetPath, function(error, returnValue) {
-				
+					if (error) return callback(error);
+					callback(null, returnValue);
 				});
 				
-				callback(null, "GeneModifier has no logic for outputting the modified gene yet.");
+				//callback(null, "GeneModifier has no logic for outputting the modified gene yet.");
 			});
 		}
 		
@@ -94,11 +95,11 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 			
 			_createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterval, firstRowLength + 1, function(errors, mergedGene, offsetDescriptor) {
 				if (errors) {
-/*
+
 					for (var i = 0; i < errors.length; i++) {
 						console.log(errors[i].message);
 					}
-*/
+
 				}
 				
 				//TODO: Make async
@@ -110,6 +111,7 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				fs.writeSync(offsetDescriptorFile, offsetDescriptor.join("\n"));
 				fs.closeSync(offsetDescriptorFile);
 				
+				callback(null, "Success!");
 				//console.log("38449860 T=" + findBaseOffset(38449860, offsetDescriptor));
 				
 			});
@@ -118,6 +120,7 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 	});
 }
 
+//Helper for resolving offsets between modified files and reference genome
 function findBaseOffset(baseOffset, offsetDescriptor) {
 	//find offset that is smaller than incoming offset (offset = 7 then 6 or smaller)
 	offsetMatch = null;
@@ -163,7 +166,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 			var changeValues = row.split("\t");
 
 			//Check if correct number of changeValues
-			if (changeValues.length !== 4) { 
+			if (changeValues.length < 4) { 
 				errors.push(new Error("Skipping changeSet row '" + row + "', not enough information in description"));
 				continue;
 			}

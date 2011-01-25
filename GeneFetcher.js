@@ -48,12 +48,13 @@ function outputGeneToFile(geneData) {
 	var callback = arguments[arguments.length - 1];
 	if (typeof(callback) !== 'function') callback = function(){};
 	
+	var extraBasePairs = 300;
 	var geneName = geneData['value'];
 	var genePosition = geneData['id'];
 	var chromosomeName = genePosition.replace(/,/g, '').split(':')[0];
 	var chromosomeFilePath = "./chromosomes/" + chromosomeName + ".fa";
-	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]);
-	var end = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[1]);
+	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]) - extraBasePairs;
+	var end = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[1]) + extraBasePairs;
 
 	//Add expected number of line breaks - defaulting to 50 characters per line
 	start += getNrOfLineBreaks(start);
@@ -65,7 +66,7 @@ function outputGeneToFile(geneData) {
 	path.exists(chromosomeFilePath, function (exists) {
 		if (exists) {
 			var output = fs.createWriteStream("./genes/" + geneName + ".fa", {encoding: 'utf8'});
-			output.write(">" + geneName + " " + genePosition + "\n");
+			output.write(">" + geneName + " " + chromosomeName + ":" + start + "-" + end + "\n");
 
 			var geneStream = fs.createReadStream(chromosomeFilePath, {
 				'bufferSize': 4 * 1024, encoding: 'utf8', 'start': start + fastaDescriptionLength, 'end': end + fastaDescriptionLength
@@ -114,7 +115,7 @@ function getGeneLocation(geneName) {
 		result.on('end', function() {
 			var geneLocations = JSON.parse(body);
 			if (geneLocations.length == 1) {
-				console.log("Fetched gene information from " + options.host + " :");
+//				console.log("Fetched gene information from " + options.host + " :");
 				
 				callback(null, geneLocations[0]);
 			}
