@@ -1,6 +1,8 @@
 /chromosomes/*
-/genes/*
-/changesets/*
+/genes/*.fa
+/genes/modified/*.fa
+/genes/modified/*.offsets
+/changesets/*.cs
 /logs/*
 
 # Include log configuration
