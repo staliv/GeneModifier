@@ -7,11 +7,10 @@
 !/logs/config.json
 
 # Include test changesets
-!/changesets/test/*
+!/changesets/test/test.*.cs
 
 # Include test gene
 !/genes/test/test.fa
-
 
 # Always include .gitignore and README files 
 !.gitignore
