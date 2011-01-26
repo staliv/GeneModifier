@@ -1,7 +1,10 @@
 /chromosomes/*
 /genes/*
 /changesets/*
-/logs/*.log
+/logs/*
+
+# Include log configuration
+!/logs/config.json
 
 # Include test changesets
 !/changesets/test/*
