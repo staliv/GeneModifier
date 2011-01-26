@@ -1,0 +1,11 @@
+{
+	"appenders": [
+		{
+			"type": "file", 
+			"filename": "logs/genemodifier.log"
+		},
+		{
+			"type": "console"
+		}
+	]
+}

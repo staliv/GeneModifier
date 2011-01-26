@@ -5,6 +5,11 @@ var http = require("http");
 var path = require("path");
 var geneFetcher = require("./GeneFetcher");
 
+var log4js = require("log4js")();
+log4js.configure("./logs/config.json");
+
+
+
 //Accepts the name of the gene and changeset from command line
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 16, process.argv[1].length) == "/GeneModifier.js") {
 	if (process.argv.length <= 3) {
@@ -13,13 +18,15 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 1
 	else {
 		modifyGene(process.argv[process.argv.length - 2], process.argv[process.argv.length - 1], function(error, message) {
 			if (error) {
-				console.log(error.message);
+				console.error(error.message);
 				return;
 			}
-			console.log(message);
+			console.info(message);
 		});
 	}
 }
+
+exports.modifyGene = modifyGene;
 
 //Returns callback(error, message)
 function modifyGene(geneName, changeSetName) {
@@ -30,10 +37,13 @@ function modifyGene(geneName, changeSetName) {
 	//Return with error if arguments are not correctly passed
 	if (!geneName || !changeSetName) return callback(new Error("Missing name of gene or changeSet"));
 
+	//If geneName includes a forward slash then assume the whole filename was provided Else assume gene is located in ./genes/
+	var genePath = (geneName.split("/").length > 0) ? geneName : "./genes/" + geneName.replace(".fa", "").toUpperCase() + ".fa";
+
+	//If changeSetName includes a forward slash then assume the whole filename was provided Else assume changeset is located in ./changesets/
+	var changeSetPath = (changeSetName.split("/").length > 0) ? changeSetName : "./changesets/" + changeSetName.replace(".cs", "") + ".cs";
+		
 	//TODO: Rewrite according to async pattern 
-	var genePath = "./genes/" + geneName.toUpperCase() + ".fa",
-		changeSetPath = "./changesets/" + changeSetName;
-	
 	//Does gene already exist?
 	path.exists(genePath, function (exists) {
 		if (!exists) {
@@ -48,14 +58,14 @@ function modifyGene(geneName, changeSetName) {
 			//Does changeSet exist?
 			path.exists(changeSetPath, function (exists) {
 				if (!exists) {
-					return callback(new Error("ChangeSet " + path.resolve("./changesets/" + changeSetName) + " does not exist."));
+					return callback(new Error("ChangeSet " + changeSetPath + " does not exist."));
 				}
 				mergeGeneAndChangeSet(genePath, changeSetPath, function(error, returnValue) {
 					if (error) return callback(error);
+
 					callback(null, returnValue);
 				});
 				
-				//callback(null, "GeneModifier has no logic for outputting the modified gene yet.");
 			});
 		}
 		
@@ -97,7 +107,7 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				if (errors) {
 
 					for (var i = 0; i < errors.length; i++) {
-						console.log(errors[i].message);
+						console.debug(errors[i].message);
 					}
 
 				}
@@ -111,7 +121,7 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				fs.writeSync(offsetDescriptorFile, offsetDescriptor.join("\n"));
 				fs.closeSync(offsetDescriptorFile);
 				
-				callback(null, "Success!");
+				callback(null, "Wrote offset description and modified gene to /genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".*");
 				//console.log("38449860 T=" + findBaseOffset(38449860, offsetDescriptor));
 				
 			});
@@ -192,7 +202,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 			switch (command) {
 				case 'S':
 					change = changeValues[3].split("-")[1];
-					console.log("Substitute " + changeValues[1] + " to " + changeValues[2] + " with " + change);
+					console.debug("Substitute " + changeValues[1] + " to " + changeValues[2] + " with " + change);
 					//Read (start - chromosomeInterval.start) - bytesRead) bytes from last position in geneFile to output, add substitution, move change.length bytes and output to writestream
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -206,7 +216,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					bytesRead += change.length;
 					break;
 				case 'D':
-					console.log("Delete " + changeValues[1] + " to " + changeValues[2]);
+					console.debug("Delete " + changeValues[1] + " to " + changeValues[2]);
 					//Read (start - chromosomeInterval.start) - position) bytes from last position in geneFile to output, move position deletion.length bytes forward
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -224,7 +234,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					break;
 				case 'I':
 					change = changeValues[3].split("-")[1];
-					console.log("Insert " + change + " to " + changeValues[1]);
+					console.debug("Insert " + change + " to " + changeValues[1]);
 					//Read (start - chromosomeInterval.start) - position) bytes from last position in geneFile to output, add insertion, move change.length bytes and output to writestream
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {

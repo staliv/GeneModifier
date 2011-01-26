@@ -1,9 +1,14 @@
 /chromosomes/*
 /genes/*
 /changesets/*
+/logs/*.log
 
-# Only in the test.cs ChangeSet
-!/changesets/test.cs
+# Include test changesets
+!/changesets/test/*
+
+# Include test gene
+!/genes/test/test.fa
+
 
 # Always include .gitignore and README files 
 !.gitignore

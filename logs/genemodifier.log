@@ -1,0 +1,218 @@
+[2011-01-26 12:09:20.067] [DEBUG] console - Substitute 38448410 to 38448411 with C
+[2011-01-26 12:09:20.079] [DEBUG] console - Substitute 38448550 to 38448551 with A
+[2011-01-26 12:09:20.079] [DEBUG] console - Substitute 38449236 to 38449237 with C
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38449933 to 38449934 with A
+[2011-01-26 12:09:20.080] [DEBUG] console - Delete 38450363 to 38450366
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38450799 to 38450800 with A
+[2011-01-26 12:09:20.080] [DEBUG] console - Delete 38451465 to 38451466
+[2011-01-26 12:09:20.080] [DEBUG] console - Insert A to 38452300
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38455227 to 38455228 with T
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38456160 to 38456161 with A
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38456213 to 38456214 with A
+[2011-01-26 12:09:20.080] [DEBUG] console - Substitute 38456850 to 38456851 with A
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38457116 to 38457117 with C
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38458367 to 38458368 with A
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38459581 to 38459582 with C
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38459703 to 38459704 with T
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38462547 to 38462548 with G
+[2011-01-26 12:09:20.081] [DEBUG] console - Insert GGAGTGGAATAC to 38462547
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38463921 to 38463922 with C
+[2011-01-26 12:09:20.081] [DEBUG] console - Delete 38463921 to 38463923
+[2011-01-26 12:09:20.081] [DEBUG] console - Delete 38465460 to 38465463
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38467418 to 38467419 with T
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38467521 to 38467522 with T
+[2011-01-26 12:09:20.081] [DEBUG] console - Substitute 38469350 to 38469351 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38469730 to 38469731 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38471858 to 38471859 with A
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38472272 to 38472273 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38473085 to 38473086 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38473305 to 38473306 with C
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38473329 to 38473330 with C
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38475987 to 38475988 with G
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38476248 to 38476249 with C
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38476619 to 38476620 with C
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38479306 to 38479307 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38479308 to 38479309 with T
+[2011-01-26 12:09:20.082] [DEBUG] console - Substitute 38479364 to 38479365 with C
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38480126 to 38480127 with C
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38480200 to 38480201 with T
+[2011-01-26 12:09:20.083] [DEBUG] console - Delete 38480269 to 38480274
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38480270 to 38480271 with C
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38480608 to 38480609 with A
+[2011-01-26 12:09:20.083] [DEBUG] console - Insert GGAA to 38480629
+[2011-01-26 12:09:20.083] [DEBUG] console - Insert T to 38482878
+[2011-01-26 12:09:20.083] [DEBUG] console - Insert T to 38482891
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38482911 to 38482912 with C
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38484049 to 38484050 with G
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38484062 to 38484063 with T
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38484515 to 38484516 with G
+[2011-01-26 12:09:20.083] [DEBUG] console - Substitute 38484746 to 38484747 with C
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38485041 to 38485042 with T
+[2011-01-26 12:09:20.084] [DEBUG] console - Delete 38485331 to 38485332
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38485427 to 38485428 with A
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38487829 to 38487830 with T
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38487995 to 38487996 with G
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38489324 to 38489325 with A
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38491478 to 38491479 with A
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38491651 to 38491652 with C
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38494915 to 38494916 with A
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38495028 to 38495029 with C
+[2011-01-26 12:09:20.084] [DEBUG] console - Substitute 38495094 to 38495095 with C
+[2011-01-26 12:09:20.084] [DEBUG] console - Insert C to 38495094
+[2011-01-26 12:09:20.085] [DEBUG] console - Delete 38495602 to 38495606
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38495603 to 38495604 with A
+[2011-01-26 12:09:20.085] [DEBUG] console - Delete 38495608 to 38495611
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38495810 to 38495811 with G
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38496715 to 38496716 with G
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38497525 to 38497526 with C
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38497960 to 38497961 with C
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38498461 to 38498462 with A
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38498762 to 38498763 with G
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38498991 to 38498992 with A
+[2011-01-26 12:09:20.085] [DEBUG] console - Insert CCT to 38500651
+[2011-01-26 12:09:20.085] [DEBUG] console - Substitute 38501129 to 38501130 with C
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38501689 to 38501690 with T
+[2011-01-26 12:09:20.086] [DEBUG] console - Delete 38502889 to 38502890
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38503589 to 38503590 with T
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38505020 to 38505021 with G
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38505171 to 38505172 with A
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38508627 to 38508628 with G
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38508636 to 38508637 with T
+[2011-01-26 12:09:20.086] [DEBUG] console - Delete 38509611 to 38509623
+[2011-01-26 12:09:20.086] [DEBUG] console - Delete 38509611 to 38509626
+[2011-01-26 12:09:20.086] [DEBUG] console - Delete 38509617 to 38509631
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38509623 to 38509624 with A
+[2011-01-26 12:09:20.086] [DEBUG] console - Substitute 38509626 to 38509627 with G
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38509628 to 38509629 with A
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38510659 to 38510660 with C
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38510717 to 38510718 with G
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38510983 to 38510984 with C
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38514758 to 38514759 with T
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38517671 to 38517672 with A
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38518284 to 38518285 with T
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38518285 to 38518286 with T
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38519301 to 38519302 with G
+[2011-01-26 12:09:20.087] [DEBUG] console - Insert T to 38519933
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38520575 to 38520576 with A
+[2011-01-26 12:09:20.087] [DEBUG] console - Delete 38521044 to 38521045
+[2011-01-26 12:09:20.087] [DEBUG] console - Substitute 38521045 to 38521046 with C
+[2011-01-26 12:09:20.088] [DEBUG] console - Delete 38521057 to 38521059
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38521731 to 38521732 with C
+[2011-01-26 12:09:20.088] [DEBUG] console - Insert T to 38521742
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38529170 to 38529171 with G
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38529772 to 38529773 with G
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38529873 to 38529874 with C
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38530712 to 38530713 with C
+[2011-01-26 12:09:20.088] [DEBUG] console - Insert GTT to 38531535
+[2011-01-26 12:09:20.088] [DEBUG] console - Substitute 38531641 to 38531642 with C
+[2011-01-26 12:09:20.089] [DEBUG] console - Substitute 38531902 to 38531903 with A
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31787362	31787363	S-A	49,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31787967	31787968	S-A	44,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31790576	31790577	D	18,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31790588	31790589	S-C	21,1', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31790589	31790590	S-T	19,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31791790	31791791	S-G	99,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.089] [DEBUG] console - Skipping changeSet row 'chr13	31792737	31792738	S-A	52,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.090] [DEBUG] console - Skipping changeSet row 'chr13	31793376	31793377	S-C	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.090] [DEBUG] console - Skipping changeSet row 'chr13	31793673	31793674	S-T	43', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.090] [DEBUG] console - Skipping changeSet row 'chr13	31797387	31797388	S-C	56,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.090] [DEBUG] console - Skipping changeSet row 'chr13	31797877	31797878	S-T	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.090] [DEBUG] console - Skipping changeSet row 'chr13	31798148	31798149	S-C	55,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31798932	31798933	S-A	50,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31800066	31800067	S-G	71,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31801684	31801685	S-T	46,9', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31803264	31803265	S-A	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31803627	31803628	S-A	47,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31803997	31803998	S-G	37', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31804479	31804480	S-C	46,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31804979	31804980	S-G	45,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31805766	31805767	S-T	51,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.091] [DEBUG] console - Skipping changeSet row 'chr13	31806346	31806347	S-T	46,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31808055	31808056	S-G	44,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31808327	31808328	S-C	61', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31808350	31808351	S-T	42', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31808720	31808721	S-C	45,8', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31809462	31809463	S-G	47,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31811054	31811055	S-G	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31813004	31813005	S-C	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31813805	31813806	S-G	46,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31816221	31816222	S-G	32,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31816303	31816304	D	13,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31816317	31816320	D-3	7,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31816318	31816320	D-2	19,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.092] [DEBUG] console - Skipping changeSet row 'chr13	31816940	31816941	S-G	66,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31818843	31818844	S-C	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31819167	31819167	I-TTATAAAAT	30', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31824653	31824654	S-G	52,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31824943	31824944	S-G	47,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31827386	31827387	S-C	99,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31827477	31827478	S-T	47,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31828184	31828185	D	22', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31828935	31828936	S-A	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31831438	31831439	S-G	41,8', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31831936	31831937	S-G	97,9', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31834645	31834646	S-C	99,4', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.093] [DEBUG] console - Skipping changeSet row 'chr13	31836172	31836173	S-C	48,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31838344	31838345	S-A	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31840935	31840936	S-G	51,1', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31840944	31840945	S-G	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31840945	31840946	S-T	43,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31840946	31840947	S-T	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31841343	31841345	D-2	36', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31841355	31841356	D	36,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31843536	31843537	S-T	48,1', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31851181	31851182	S-G	50', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31851387	31851388	S-C	98,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31851749	31851750	S-C	57,7', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.094] [DEBUG] console - Skipping changeSet row 'chr13	31852560	31852561	S-A	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31853396	31853397	S-T	90,9', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31857198	31857199	S-T	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31857838	31857839	S-C	97,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31858362	31858363	S-G	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31861706	31861707	S-T	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31863650	31863651	S-C	95,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31863763	31863764	S-T	46,2', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31866590	31866591	S-A	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31866606	31866607	S-G	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31868030	31868031	S-C	51', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31868598	31868599	S-G	55,6', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31868735	31868736	S-C	98,9', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.095] [DEBUG] console - Skipping changeSet row 'chr13	31869424	31869425	S-C	100', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.096] [DEBUG] console - Skipping changeSet row 'chr13	31871275	31871276	S-G	34,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.096] [DEBUG] console - Skipping changeSet row 'chr13	31871923	31871923	I-T	13,9', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.096] [DEBUG] console - Skipping changeSet row 'chr13	31872217	31872218	S-T	58,5', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.096] [DEBUG] console - Skipping changeSet row 'chr13	31872287	31872288	S-A	99,3', non matching gene, expected chr17 found chr13
+[2011-01-26 12:09:20.097] [INFO] console - Wrote offset description and modified gene to /genes/modified/BRCA1_100414_L3902.cs.*
+[2011-01-26 12:29:55.917] [ERROR] console - Found multiple genes matching 'f' from genome.ucsc.edu. 
+Please specify one of them from the list above.
+[2011-01-26 12:53:37.772] [DEBUG] console - Found gene: [object Object]
+[2011-01-26 12:53:37.784] [INFO] console - 38449540
+[2011-01-26 12:53:37.790] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA1.fa
+[2011-01-26 12:54:25.225] [DEBUG] console - Found gene: [object Object]
+[2011-01-26 12:54:47.429] [DEBUG] console - Found gene: chr17:38449840-38530994
+[2011-01-26 12:54:47.440] [INFO] console - 38449540
+[2011-01-26 12:54:47.448] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA1.fa
+[2011-01-26 12:59:15.744] [DEBUG] console - Found gene: chr17:38449840-38530994
+[2011-01-26 12:59:15.756] [INFO] console - 38449540
+[2011-01-26 12:59:15.762] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA1.fa
+[2011-01-26 13:01:43.950] [DEBUG] console - Found gene: chr17:38449840-38530994
+[2011-01-26 13:01:43.968] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA1.fa
+[2011-01-26 13:01:48.681] [DEBUG] console - Found gene: chr13:31787617-31871809
+[2011-01-26 13:01:48.741] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA2.fa
+[2011-01-26 13:02:38.768] [DEBUG] console - Found gene: chr17:38449840-38530994
+[2011-01-26 13:02:38.785] [DEBUG] console - Created gene file: /ExamWork/Projects/GeneModifier/genes/BRCA1.fa
+[2011-01-26 14:22:00.120] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:25:10.327] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:28:52.913] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:29:53.788] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:36:24.068] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:40:42.036] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:49:01.475] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:49:01.515] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:50:19.594] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:50:19.598] [DEBUG] console - Delete 38449840 to 38449842
+[2011-01-26 14:57:57.642] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:57:57.652] [DEBUG] console - Delete 38449840 to 38449842
+[2011-01-26 14:58:52.165] [DEBUG] console - Substitute 38449840 to 38449841 with X
+[2011-01-26 14:58:52.169] [DEBUG] console - Delete 38449840 to 38449842
+[2011-01-26 14:58:52.170] [DEBUG] console - Insert XXX to 38449840

@@ -1,0 +1,15 @@
+modifyGene
+	- modify with substituion - > control
+	- modify with substituion, insertion - > control
+	- modify with substituion, insertion, deletion - > control
+	- modify with substituion, deletion, insertion - > control
+
+	- modify with insertion - > control
+	- modify with insertion, substitution - > control
+	- modify with insertion, substitution, deletion - > control
+	- modify with insertion, deletion, substitution - > control
+
+	- modify with deletion - > control
+	- modify with deletion, substitution - > control
+	- modify with deletion, substitution, insertion - > control
+	- modify with deletion, insertion, substitution - > control

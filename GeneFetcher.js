@@ -4,20 +4,25 @@ var fs = require("fs");
 var http = require("http");
 var path = require("path");
 
+var log4js = require("log4js")();
+log4js.configure("./logs/config.json");
+
 //Accepts the name of the gene from command line
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 15, process.argv[1].length) == "/GeneFetcher.js") {
 	if (process.argv.length == 2) {
-		console.log("Example usage: 'node GeneFetcher.js brca1'");
+		console.info("Example usage: 'node GeneFetcher.js brca1'");
 	}
 	else {
 		fetchGene(process.argv[process.argv.length - 1], function(error, fileName) {
 			if (error) {
-				console.log(error.message);
+				console.error(error.message);
 				return;
 			}
 		});
 	}
 }
+
+exports.fetchGene = fetchGene;
 
 //Returns callback(error, fileName)
 function fetchGene(name) {
@@ -39,9 +44,6 @@ function fetchGene(name) {
 	});
 }
 
-exports.fetchGene = fetchGene;
-
-
 //Returns callback(error, fileName)
 function outputGeneToFile(geneData) {
 	
@@ -57,8 +59,8 @@ function outputGeneToFile(geneData) {
 	var end = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[1]) + extraBasePairs;
 
 	//Add expected number of line breaks - defaulting to 50 characters per line
-	start += getNrOfLineBreaks(start);
-	end += getNrOfLineBreaks(end);
+	var startBytes = start + getNrOfLineBreaks(start);
+	var endBytes = end + getNrOfLineBreaks(end);
 	
 	var fastaDescriptionLength = (">" + chromosomeName).length;
 	
@@ -69,7 +71,7 @@ function outputGeneToFile(geneData) {
 			output.write(">" + geneName + " " + chromosomeName + ":" + start + "-" + end + "\n");
 
 			var geneStream = fs.createReadStream(chromosomeFilePath, {
-				'bufferSize': 4 * 1024, encoding: 'utf8', 'start': start + fastaDescriptionLength, 'end': end + fastaDescriptionLength
+				'bufferSize': 4 * 1024, encoding: 'utf8', 'start': startBytes + fastaDescriptionLength, 'end': endBytes + fastaDescriptionLength
 			});
 			geneStream.on("data", function(chunk) {
 				output.write(chunk.replace(/\n/g, ""));
@@ -77,7 +79,7 @@ function outputGeneToFile(geneData) {
 			geneStream.on("end", function() {
 				output.end();
 				output.destroySoon();
-				console.log("Created gene file: " + path.resolve("./genes/" + geneName + ".fa"));
+				console.debug("Created gene file: " + path.resolve("./genes/" + geneName + ".fa"));
 				callback(null, path.resolve("./genes/" + geneName + ".fa"));
 			});
 
@@ -115,7 +117,7 @@ function getGeneLocation(geneName) {
 		result.on('end', function() {
 			var geneLocations = JSON.parse(body);
 			if (geneLocations.length == 1) {
-//				console.log("Fetched gene information from " + options.host + " :");
+				console.debug("Found gene: " + geneLocations[0].id);
 				
 				callback(null, geneLocations[0]);
 			}
@@ -128,7 +130,7 @@ function getGeneLocation(geneName) {
 			}
 		})
 	}).on('error', function(error) {
-		console.log("Error trying to retrieve gene location from " + options.host + ": " + error.message);
+		console.error("Error trying to retrieve gene location from " + options.host + ": " + error.message);
 		return callback(error);
 	});
 }
