@@ -3,7 +3,7 @@ var vows = require("vows"),
 	fs = require("fs");
 
 vows.describe('GeneModifier').addBatch({
-    'Get geneModifier': {
+    'First 10 tests': {
 		topic: function() {
 			var geneModifier = require('../GeneModifier');
 			return geneModifier;
@@ -97,5 +97,268 @@ vows.describe('GeneModifier').addBatch({
 				fs.unlinkSync("genes/modified/test_test.i.cs.offsets");
 			}      
 		},
-    }
+		'substitution and insertion' : {
+			topic: function(geneModifier) {
+				//Create a test gene with a substitution, insertion
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.si.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with substitution and insertion': function(error, result) {
+				//Should create file genes/modified/test_test.si.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.si.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.si.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.si.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.si.cs.fa", "utf8");
+				
+				//Compare to test/test_test.si.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.si.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.si.cs.offsets");
+			}      
+		},
+		'substitution, insertion, deletion' : {
+			topic: function(geneModifier) {
+				//Create a test gene with a substitution, insertion, deletion
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.sid.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with substitution, insertion and deletion': function(error, result) {
+				//Should create file genes/modified/test_test.sid.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.sid.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.sid.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.sid.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.sid.cs.fa", "utf8");
+				
+				//Compare to test/test_test.sid.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.sid.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.sid.cs.offsets");
+			}
+		},
+		'substitution, deletion, insertion' : {
+			topic: function(geneModifier) {
+				//Create a test gene with a substitution, deletion, insertion
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.sdi.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with substitution, deletion and insertion': function(error, result) {
+				//Should create file genes/modified/test_test.sdi.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.sdi.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.sdi.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.sdi.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.sdi.cs.fa", "utf8");
+				
+				//Compare to test/test_test.sdi.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.sdi.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.sdi.cs.offsets");
+			}
+		},
+		'insertion, substitution' : {
+			topic: function(geneModifier) {
+				//Create a test gene with insertion, substitution
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.is.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with insertion, substitution': function(error, result) {
+				//Should create file genes/modified/test_test.is.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.is.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.is.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.is.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.is.cs.fa", "utf8");
+				
+				//Compare to test/test_test.is.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.is.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.is.cs.offsets");
+			}
+		},
+		'insertion, substitution, deletion' : {
+			topic: function(geneModifier) {
+				//Create a test gene with insertion, substitution, deletion
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.isd.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with insertion, substitution, deletion': function(error, result) {
+				//Should create file genes/modified/test_test.isd.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.isd.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.isd.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.isd.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.isd.cs.fa", "utf8");
+				
+				//Compare to test/test_test.isd.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.isd.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.isd.cs.offsets");
+			}
+		},
+	},
+    'Second 10 tests': {
+		topic: function() {
+			var geneModifier = require('../GeneModifier');
+			return geneModifier;
+		},
+	
+		'should return GeneModifier with export.modifyGene': function(geneModifier) {
+			assert.isFunction(geneModifier.modifyGene);
+		},
+		
+		'insertion, deletion, substitution' : {
+			topic: function(geneModifier) {
+				//Create a test gene with insertion, deletion, substitution
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.ids.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with insertion, deletion, substitution': function(error, result) {
+				//Should create file genes/modified/test_test.ids.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.ids.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.ids.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.ids.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.ids.cs.fa", "utf8");
+				
+				//Compare to test/test_test.ids.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.ids.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.ids.cs.offsets");
+			}
+		},
+		'deletion, substitution' : {
+			topic: function(geneModifier) {
+				//Create a test gene with deletion, substitution
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.ds.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with deletion, substitution': function(error, result) {
+				//Should create file genes/modified/test_test.ds.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.ds.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.ds.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.ds.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.ds.cs.fa", "utf8");
+				
+				//Compare to test/test_test.ds.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.ds.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.ds.cs.offsets");
+			}
+		},
+		'deletion, substitution, insertion' : {
+			topic: function(geneModifier) {
+				//Create a test gene with deletion, substitution, insertion
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.dsi.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with deletion, substitution, insertion': function(error, result) {
+				//Should create file genes/modified/test_test.dsi.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.dsi.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.dsi.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.dsi.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.dsi.cs.fa", "utf8");
+				
+				//Compare to test/test_test.dsi.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.dsi.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.dsi.cs.offsets");
+			}
+		},
+		'deletion, insertion, substitution' : {
+			topic: function(geneModifier) {
+				//Create a test gene with deletion, insertion, substitution
+				geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.dis.cs", this.callback);
+			},
+			'should not return an error': function(error, result) {
+				assert.isNull(error);
+			},
+			'should create a gene equal to compare gene with deletion, insertion, substitution': function(error, result) {
+				//Should create file genes/modified/test_test.dis.cs.fa
+				var statModifiedGene = fs.statSync("genes/modified/test_test.dis.cs.fa");
+				assert.isNotZero(statModifiedGene.size);
+
+				var statOffsetDescriptor = fs.statSync("genes/modified/test_test.dis.cs.offsets");
+				assert.isNotZero(statOffsetDescriptor.size);
+
+				//Read modified and compare gene from disk
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.dis.cs.fa", "utf8");
+				var compareGene = fs.readFileSync("test/test_test.dis.cs.fa", "utf8");
+				
+				//Compare to test/test_test.dis.cs.fa
+				assert.equal(modifiedGene.split("\n")[1], compareGene.split("\n")[1]);
+				
+				//Remove the created modified gene and offset descriptions
+				fs.unlinkSync("genes/modified/test_test.dis.cs.fa");
+				fs.unlinkSync("genes/modified/test_test.dis.cs.offsets");
+			}
+		},
+	}
 }).export(module);

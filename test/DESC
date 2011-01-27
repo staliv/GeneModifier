@@ -1,15 +1,17 @@
 modifyGene
-	- modify with substituion - > control
-	- modify with substituion, insertion - > control
-	- modify with substituion, insertion, deletion - > control
-	- modify with substituion, deletion, insertion - > control
+X	- modify with substitution - > control
+X	- modify with substitution, insertion - > control
+X	- modify with substitution, insertion, deletion - > control
+X	- modify with substitution, deletion, insertion - > control
 
-	- modify with insertion - > control
-	- modify with insertion, substitution - > control
-	- modify with insertion, substitution, deletion - > control
-	- modify with insertion, deletion, substitution - > control
+X	- modify with insertion - > control
+X	- modify with insertion, substitution - > control
+X	- modify with insertion, substitution, deletion - > control
+X	- modify with insertion, deletion, substitution - > control
 
-	- modify with deletion - > control
-	- modify with deletion, substitution - > control
-	- modify with deletion, substitution, insertion - > control
-	- modify with deletion, insertion, substitution - > control
+X	- modify with deletion - > control
+X	- modify with deletion, substitution - > control
+X	- modify with deletion, substitution, insertion - > control
+X	- modify with deletion, insertion, substitution - > control
+
+control mapping back to reference genome
