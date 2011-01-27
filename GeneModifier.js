@@ -1,7 +1,6 @@
 #!/usr/local/bin/node
 
 var fs = require("fs");
-var http = require("http");
 var path = require("path");
 var geneFetcher = require("./GeneFetcher");
 
@@ -122,23 +121,11 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				fs.closeSync(offsetDescriptorFile);
 				
 				callback(null, "Wrote offset description and modified gene to /genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".*");
-				//console.log("38449860 T=" + findBaseOffset(38449860, offsetDescriptor));
 				
 			});
 		});
 
 	});
-}
-
-//Helper for resolving offsets between modified files and reference genome
-function findBaseOffset(baseOffset, offsetDescriptor) {
-	//find offset that is smaller than incoming offset (offset = 7 then 6 or smaller)
-	offsetMatch = null;
-	for (var i = (offsetDescriptor.length - 1); i >= 0; i--) {
-		if (offsetDescriptor[i][0] < baseOffset) {
-			return baseOffset + offsetDescriptor[i][1];
-		}
-	}
 }
 
 //Returns callback(errors[], mergedGene[], offsetDescriptor[])

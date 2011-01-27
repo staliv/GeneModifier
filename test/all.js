@@ -1,6 +1,7 @@
 var vows = require("vows"), 
 	assert = require("assert"),
-	fs = require("fs");
+	fs = require("fs")
+	sys = require("sys");
 
 vows.describe('GeneModifier').addBatch({
     'First 10 tests': {
@@ -360,5 +361,118 @@ vows.describe('GeneModifier').addBatch({
 				fs.unlinkSync("genes/modified/test_test.dis.cs.offsets");
 			}
 		},
+	},
+    'Test backMapping': {
+    	topic: function () {
+			var geneModifier = require("../GeneModifier");
+			//Create a test gene with lots of modifications
+			geneModifier.modifyGene("genes/test/test.fa", "changesets/test/test.backmapping.cs", this.callback);
+		},"after modifying gene for backmapping 1": {
+			topic: function(result) {
+				var backMapper = require("../PositionBackMapper");
+				backMapper.backMap("genes/modified/test_test.backmapping.cs.fa", 38449855, this.callback);
+			}, "testing 38449855": function(error, result) {
+				assert.isNull(error);
+
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.backmapping.cs.fa", "utf8");
+				var referenceGene = fs.readFileSync("genes/test/test.fa", "utf8");
+
+				var geneStartPosition = parseFloat(referenceGene.split("\n")[0].split(" ")[1].split(":")[1].split("-")[0]);
+
+				//Find base in modified gene
+				var modifiedBase = modifiedGene.split("\n")[1].substr(38449855 - geneStartPosition, 1);
+				
+				//Base in reference gene
+				var referenceBase = referenceGene.split("\n")[1].substr(result - geneStartPosition, 1);
+				
+				//sys.puts((result - geneStartPosition) + ":" + (38449855 - geneStartPosition) + ":" + modifiedBase + " = " + referenceBase);
+				//Compare the base chars
+				assert.equal(modifiedBase, referenceBase);
+				
+				//Remove the created modified gene and offset descriptions
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.fa");
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.offsets");
+				
+			}
+		},"after modifying gene for backmapping 2": {
+			topic: function(result) {
+				var backMapper = require("../PositionBackMapper");
+				backMapper.backMap("genes/modified/test_test.backmapping.cs.fa", 38449845, this.callback);
+			}, "testing 38449845": function(error, result) {
+				assert.isNull(error);
+
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.backmapping.cs.fa", "utf8");
+				var referenceGene = fs.readFileSync("genes/test/test.fa", "utf8");
+
+				var geneStartPosition = parseFloat(referenceGene.split("\n")[0].split(" ")[1].split(":")[1].split("-")[0]);
+
+				//Find base in modified gene
+				var modifiedBase = modifiedGene.split("\n")[1].substr(38449845 - geneStartPosition, 1);
+				
+				//Base in reference gene
+				var referenceBase = referenceGene.split("\n")[1].substr(result - geneStartPosition, 1);
+				
+				//Compare the base chars
+				assert.equal(modifiedBase, referenceBase);
+				
+				//Remove the created modified gene and offset descriptions
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.fa");
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.offsets");
+				
+			}
+		},"after modifying gene for backmapping 3": {
+			topic: function(result) {
+				var backMapper = require("../PositionBackMapper");
+				backMapper.backMap("genes/modified/test_test.backmapping.cs.fa", 38449865, this.callback);
+			}, "testing 38449865": function(error, result) {
+				assert.isNull(error);
+
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.backmapping.cs.fa", "utf8");
+				var referenceGene = fs.readFileSync("genes/test/test.fa", "utf8");
+
+				var geneStartPosition = parseFloat(referenceGene.split("\n")[0].split(" ")[1].split(":")[1].split("-")[0]);
+
+				//Find base in modified gene
+				var modifiedBase = modifiedGene.split("\n")[1].substr(38449865 - geneStartPosition, 1);
+				
+				//Base in reference gene
+				var referenceBase = referenceGene.split("\n")[1].substr(result - geneStartPosition, 1);
+				
+				//Compare the base chars
+				assert.equal(modifiedBase, referenceBase);
+				
+				//Remove the created modified gene and offset descriptions
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.fa");
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.offsets");
+				
+			}
+		},"after modifying gene for backmapping 4": {
+			topic: function(result) {
+				var backMapper = require("../PositionBackMapper");
+				backMapper.backMap("genes/modified/test_test.backmapping.cs.fa", 38449875, this.callback);
+			}, "testing 38449875": function(error, result) {
+				assert.isNull(error);
+
+				var modifiedGene = fs.readFileSync("genes/modified/test_test.backmapping.cs.fa", "utf8");
+				var referenceGene = fs.readFileSync("genes/test/test.fa", "utf8");
+
+				var geneStartPosition = parseFloat(referenceGene.split("\n")[0].split(" ")[1].split(":")[1].split("-")[0]);
+
+				//Find base in modified gene
+				var modifiedBase = modifiedGene.split("\n")[1].substr(38449875 - geneStartPosition, 1);
+				
+				//Base in reference gene
+				var referenceBase = referenceGene.split("\n")[1].substr(result - geneStartPosition, 1);
+				
+				//Compare the base chars
+				assert.equal(modifiedBase, referenceBase);
+				
+				//Remove the created modified gene and offset descriptions
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.fa");
+				//fs.unlinkSync("genes/modified/test_test.backmapping.cs.offsets");
+				
+			}
+		},
+
 	}
 }).export(module);
