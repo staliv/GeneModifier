@@ -3,6 +3,7 @@
 var fs = require("fs");
 var http = require("http");
 var path = require("path");
+var sys = require("sys");
 
 var log4js = require("log4js")();
 log4js.configure("./logs/config.json");
@@ -10,14 +11,16 @@ log4js.configure("./logs/config.json");
 //Accepts the name of the gene from command line
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 15, process.argv[1].length) == "/GeneFetcher.js") {
 	if (process.argv.length == 2) {
-		console.info("Example usage: 'node GeneFetcher.js brca1'");
+		sys.puts("Example usage: 'node GeneFetcher.js brca1'");
 	}
 	else {
 		fetchGene(process.argv[process.argv.length - 1], function(error, fileName) {
 			if (error) {
-				console.error(error.message);
+				sys.puts(error.message);
 				return;
 			}
+			
+			sys.puts("Wrote: " + fileName);
 		});
 	}
 }
