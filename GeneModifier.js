@@ -2,25 +2,25 @@
 
 var fs = require("fs");
 var path = require("path");
-var geneFetcher = require("./GeneFetcher");
+var sys = require("sys");
 
 var log4js = require("log4js")();
 log4js.configure("./logs/config.json");
 
-
+var geneFetcher = require("./GeneFetcher");
 
 //Accepts the name of the gene and changeset from command line
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 16, process.argv[1].length) == "/GeneModifier.js") {
 	if (process.argv.length <= 3) {
-		console.log("Example usage: 'node GeneModifier.js geneName changeSetName'");
+		sys.puts("Example usage: 'node GeneModifier.js geneName changeSetName'");
 	}
 	else {
 		modifyGene(process.argv[process.argv.length - 2], process.argv[process.argv.length - 1], function(error, message) {
 			if (error) {
-				console.error(error.message);
+				sys.puts(error.message);
 				return;
 			}
-			console.info(message);
+			sys.puts(message);
 		});
 	}
 }
@@ -50,7 +50,7 @@ function modifyGene(geneName, changeSetName) {
 			geneFetcher.fetchGene(geneName, function(error, filePath) {
 				if (error) return callback(error);
 				//Try again with the same callback
-				modifyGene(path.basename(filePath, ".fa"), changeSetName, callback);
+				modifyGene(filePath, changeSetName, callback);
 			});
 		}
 		else {
@@ -64,12 +64,9 @@ function modifyGene(geneName, changeSetName) {
 
 					callback(null, returnValue);
 				});
-				
 			});
 		}
-		
 	});
-	
 }
 
 //Returns callback(error, returnValue)
@@ -147,6 +144,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 	
 	var output = [],
 		offsetDescriptor = [[chromosomeInterval.start,0]],
+		insertionsDescriptor = [],
 		position = offset,
 		bytesRead = 0,
 		deletionsLength = 0,
@@ -215,9 +213,10 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					difference = (parseFloat(changeValues[2]) - parseFloat(changeValues[1]));
 					position += difference;
 					bytesRead += difference;
-					deletionsLength += difference;
 					//[start + previousInsertionLengths, previousOffset + (end - start)]
-					offsetDescriptor.push([parseFloat(changeValues[1]) + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
+//					offsetDescriptor.push([parseFloat(changeValues[1]) + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
+					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
+					deletionsLength += difference;
 					break;
 				case 'I':
 					change = changeValues[3].split("-")[1];
@@ -231,9 +230,12 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 						position += read[1];
 					}
 					output.push(change);
+//					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + change.length, offsetDescriptor[offsetDescriptor.length - 1][1] - change.length]);
+					//Mark insertions back to where the insertion started
+					for (var x = 0; x < change.length; x++) {
+						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength + x, offsetDescriptor[offsetDescriptor.length - 1][1] - 1]);
+					}
 					insertionsLength += change.length;
-					//[start - previousDeletionLengths + change.length, previousOffset - change.length]
-					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + change.length, offsetDescriptor[offsetDescriptor.length - 1][1] - change.length]);
 					break;
 			}
 		}
