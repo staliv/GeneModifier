@@ -53,8 +53,6 @@ function backMap(modifiedGenePath, basePositionInModifiedGene) {
 
 					//TODO: Check if position is out of bounds?
 
-					//TODO: Check if position is inside of an insertion
-
 					//Do the actual backMapping
 					var offsetDescriptor = fs.readFileSync(offsetsPath, "utf8").split("\n");
 					var referencePosition = calculateReferencePosition(modifiedPosition, offsetDescriptor);
@@ -74,7 +72,7 @@ function backMap(modifiedGenePath, basePositionInModifiedGene) {
 
 //Helper for resolving positions between modified files and reference genome
 function calculateReferencePosition(modifiedPosition, offsetDescriptor) {
-	//find offset that is smaller than or equal to incoming position (position = 7 then 6 or smaller)
+	//Find offset that is smaller than or equal to incoming position
 	for (var i = (offsetDescriptor.length - 1); i >= 0; i--) {
 		if (parseFloat(offsetDescriptor[i].split(",")[0]) <= modifiedPosition) {
 			return modifiedPosition + parseFloat(offsetDescriptor[i].split(",")[1]);
