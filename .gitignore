@@ -4,6 +4,7 @@
 /genes/modified/*.offsets
 /changesets/*.cs
 /logs/*
+.settings.xml
 
 # Include log configuration
 !/logs/config.json
