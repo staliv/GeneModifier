@@ -3,7 +3,7 @@
 /genes/modified/*.fa
 /genes/modified/*.offsets
 /changesets/*.cs
-/logs/*
+*logs/*
 .settings.xml
 
 # Include log configuration
