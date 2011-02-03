@@ -110,7 +110,7 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				
 				//TODO: Make async
 				var mergedFile = fs.openSync("./genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".fa", "w");
-				fs.writeSync(mergedFile, firstRow + " modified with " + path.basename(changeSetPath) + "\n" + mergedGene.join(''));
+				fs.writeSync(mergedFile, firstRow.replace(" ", "::") + "::" + path.basename(changeSetPath) + "\n" + mergedGene.join(''));
 				fs.closeSync(mergedFile);
 
 				var offsetDescriptorFile = fs.openSync("./genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".offsets", "w");
