@@ -1,4 +1,5 @@
 /chromosomes/*
+/tmp/*
 /genes/*.fa
 /genes/modified/*.fa
 /genes/modified/*.offsets
