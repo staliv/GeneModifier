@@ -58,14 +58,14 @@ function outputGeneToFile(geneData) {
 	var genePosition = geneData['id'];
 	var chromosomeName = genePosition.replace(/,/g, '').split(':')[0];
 	var chromosomeFilePath = "./chromosomes/" + chromosomeName + ".fa";
-	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]) - extraBasePairs;
+	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]) - extraBasePairs - 1;
 	var end = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[1]) + extraBasePairs;
 
 	//Add expected number of line breaks - defaulting to 50 characters per line
 	var startBytes = start + getNrOfLineBreaks(start);
 	var endBytes = end + getNrOfLineBreaks(end);
 	
-	var fastaDescriptionLength = (">" + chromosomeName).length;
+	var fastaDescriptionLength = (">" + chromosomeName).length + 1;
 	
 	//TODO: Check if gene exists, if not then download
 	path.exists(chromosomeFilePath, function (exists) {
