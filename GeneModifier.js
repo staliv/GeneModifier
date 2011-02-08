@@ -214,7 +214,6 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					position += difference;
 					bytesRead += difference;
 					//[start + previousInsertionLengths, previousOffset + (end - start)]
-//					offsetDescriptor.push([parseFloat(changeValues[1]) + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
 					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
 					deletionsLength += difference;
 					break;
@@ -230,12 +229,12 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 						position += read[1];
 					}
 					output.push(change);
-//					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + change.length, offsetDescriptor[offsetDescriptor.length - 1][1] - change.length]);
 					//Mark insertions back to where the insertion started
+					var backMapPosition = offsetDescriptor[offsetDescriptor.length - 1][1] - change.length;
 					for (var x = 0; x < change.length; x++) {
-						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength + x, offsetDescriptor[offsetDescriptor.length - 1][1] - 1]);
+						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, backMapPosition]);
+						insertionsLength++;
 					}
-					insertionsLength += change.length;
 					break;
 			}
 		}
