@@ -50,10 +50,29 @@ app.get('/json/logs', function(request, response) {
 
         //Exclude config.json
         logFiles.splice(logFiles.indexOf("config.json"), 1);
+        logFiles.splice(logFiles.indexOf(".DS_Store"), 1);
         
         response.send(JSON.stringify(logFiles));
     });
 });
+
+app.get('/json/genes', function(request, response) {
+    response.contentType('application/json');
+    
+    fs.readdir("../genes/", function(error, geneFiles) {
+        if (error) return error;
+
+        //Exclude README
+        geneFiles.splice(geneFiles.indexOf("README"), 1);
+
+        geneFiles.splice(geneFiles.indexOf(".gitignore"), 1);
+        geneFiles.splice(geneFiles.indexOf("modified"), 1);
+        geneFiles.splice(geneFiles.indexOf(".DS_Store"), 1);
+        
+        response.send(JSON.stringify(geneFiles));
+    });
+});
+
 
 app.get('/json/genes/modified', function(request, response) {
     response.contentType('application/json');
@@ -63,6 +82,7 @@ app.get('/json/genes/modified', function(request, response) {
 
         //Exclude README
         modifiedGeneFiles.splice(modifiedGeneFiles.indexOf("README"), 1);
+        modifiedGeneFiles.splice(modifiedGeneFiles.indexOf(".DS_Store"), 1);
 
         //Redistribute according to .fa - .offsets
         
@@ -81,6 +101,7 @@ app.get('/json/changesets', function(request, response) {
         //Exclude README and test directory
         changeSetFiles.splice(changeSetFiles.indexOf("README"), 1);
         changeSetFiles.splice(changeSetFiles.indexOf("test"), 1);
+        changeSetFiles.splice(changeSetFiles.indexOf(".DS_Store"), 1);
         
         response.send(JSON.stringify(changeSetFiles));
     });
@@ -95,6 +116,7 @@ app.get('/json/chromosomes', function(request, response) {
         //Exclude README 
         chromosomeFiles.splice(chromosomeFiles.indexOf("README"), 1);
         chromosomeFiles.splice(chromosomeFiles.indexOf(".gitignore"), 1);
+        chromosomeFiles.splice(chromosomeFiles.indexOf(".DS_Store"), 1);
 
         response.send(JSON.stringify(chromosomeFiles));
     });
