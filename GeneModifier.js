@@ -3,6 +3,7 @@
 var fs = require("fs");
 var path = require("path");
 var sys = require("sys");
+var prepareForIndexing = require("./utils/PrepareForIndexing");
 
 var log4js = require("log4js")();
 log4js.configure("./logs/config.json");
@@ -102,9 +103,11 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 			_createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterval, firstRowLength + 1, function(errors, mergedGene, offsetDescriptor) {
 				if (errors) {
 
-					for (var i = 0; i < errors.length; i++) {
-						console.debug(errors[i].message);
-					}
+//					for (var i = 0; i < errors.length; i++) {
+//						console.error(errors[i].message);
+//					}
+					
+					return callback(errors);
 
 				}
 				
@@ -116,8 +119,14 @@ function mergeGeneAndChangeSet(genePath, changeSetPath) {
 				var offsetDescriptorFile = fs.openSync("./genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".offsets", "w");
 				fs.writeSync(offsetDescriptorFile, offsetDescriptor.join("\n"));
 				fs.closeSync(offsetDescriptorFile);
-				
-				callback(null, "Wrote offset description and modified gene to /genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".*");
+
+				//Prepare gene for indexing (inserts line breaks)
+				prepareForIndexing.prepareForIndexing("./genes/modified/" + path.basename(genePath, ".fa") + "_" + path.basename(changeSetPath) + ".fa", function(error, fileName) {
+					if (error) {
+						return callback(error);
+					}
+					callback(null, fileName);
+				});
 				
 			});
 		});
@@ -133,11 +142,51 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 
 	var changeRows = changeSet.split("\n");
 	var errors = [];
-	var i = 0, nrOfRows = changeRows.length;
 	
-	//TODO: Check changeset for changes that conflict with each other
+	var conflict = {}, recentlySkippedRows = 0;
 	
 	//TODO: Make sure changeset is correctly ordered
+
+	//Check changeset for changes that conflict with each other
+	for (var i = 0; i < changeRows.length; i++) {
+		if (changeRows[i] !== "" && changeRows[i].substr(0, 1) !== "#") {
+			var chr = changeRows[i].split("\t")[0];
+			if (conflict[chr] === undefined) {
+				conflict[chr] = [];
+			}
+			for (var x = parseFloat(changeRows[i].split("\t")[1]); x < parseFloat(changeRows[i].split("\t")[2]); x++) {
+				if (conflict[chr].indexOf(x) !== -1) {
+					//We have a conflict, skip this row
+					console.error("Row " + (i + 1 + recentlySkippedRows) + " has a conflicting changeset.");
+					changeRows.splice(i, 1);
+					recentlySkippedRows++;
+					break;
+				} else {
+					conflict[chr].push(x);
+				}
+			}
+			//Deletions
+			if (parseFloat(changeRows[i].split("\t")[1]) === parseFloat(changeRows[i].split("\t")[2])) {
+				if (conflict[chr].indexOf(parseFloat(changeRows[i].split("\t")[1])) !== -1) {
+					//We have a conflict, skip this row
+					console.error("Row " + (i + 1 + recentlySkippedRows) + " has a conflicting changeset. Skipping row.");
+					changeRows.splice(i, 1);
+					recentlySkippedRows++;
+				} else {
+					conflict[chr].push(parseFloat(changeRows[i].split("\t")[1]));
+				}
+			
+			}
+			
+		}
+	}
+
+	if (recentlySkippedRows > 0) {
+		//Changeset must be fixed
+		return callback(new Error("The changeset has conflicts, please fix before trying to modify the gene."));
+	}
+
+	var i = 0, nrOfRows = changeRows.length;
 
 	//Open gene for reading
 	var geneFile = fs.openSync(genePath, "r");
@@ -162,19 +211,19 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 
 			//Check if correct number of changeValues
 			if (changeValues.length < 4) { 
-				errors.push(new Error("Skipping changeSet row '" + row + "', not enough information in description"));
+//				errors.push(new Error("Skipping changeSet row '" + row + "', not enough information in description"));
 				continue;
 			}
 
 			//Check if correct chromosome
 			if (changeValues[0] !== chromosomeName) {
-				errors.push(new Error("Skipping changeSet row '" + row + "', non matching gene, expected " + chromosomeName + " found " + changeValues[0]));
+//				errors.push(new Error("Skipping changeSet row '" + row + "', non matching gene, expected " + chromosomeName + " found " + changeValues[0]));
 				continue;
 			}
 
 			//Check if interval is suitable
 			if (parseFloat(changeValues[1]) >= chromosomeInterval.start && parseFloat(changeValues[2]) <= chromosomeInterval.end) {
-				errors.push(new Error("Skipping changeSet row '" + row + "', non matching interval"));
+//				errors.push(new Error("Skipping changeSet row '" + row + "', non matching interval"));
 				continue;
 			}
 			
@@ -187,7 +236,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 			switch (command) {
 				case 'S':
 					change = changeValues[3].split("-")[1];
-					console.debug("Substitute " + changeValues[1] + " to " + changeValues[2] + " with " + change);
+//					console.debug("Substitute " + changeValues[1] + " to " + changeValues[2] + " with " + change);
 					//Read (start - chromosomeInterval.start) - bytesRead) bytes from last position in geneFile to output, add substitution, move change.length bytes and output to writestream
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -201,7 +250,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					bytesRead += change.length;
 					break;
 				case 'D':
-					console.debug("Delete " + changeValues[1] + " to " + changeValues[2]);
+//					console.debug("Delete " + changeValues[1] + " to " + changeValues[2]);
 					//Read (start - chromosomeInterval.start) - position) bytes from last position in geneFile to output, move position deletion.length bytes forward
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -219,7 +268,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					break;
 				case 'I':
 					change = changeValues[3].split("-")[1];
-					console.debug("Insert " + change + " to " + changeValues[1]);
+//					console.debug("Insert " + change + " to " + changeValues[1]);
 					//Read (start - chromosomeInterval.start) - position) bytes from last position in geneFile to output, add insertion, move change.length bytes and output to writestream
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -231,6 +280,10 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					output.push(change);
 					//Mark insertions back to where the insertion started
 					var backMapPosition = offsetDescriptor[offsetDescriptor.length - 1][1] - change.length;
+					for (var x = 0; x < change.length; x++) {
+						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength + x - change.length, backMapPosition]);
+//						insertionsLength++;
+					}
 					for (var x = 0; x < change.length; x++) {
 						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, backMapPosition]);
 						insertionsLength++;
