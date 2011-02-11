@@ -39,12 +39,12 @@ function prepareForIndexing(pathToGene) {
 			output.push(gene[0] + "\n");
 			output.push(insertLineBreaks(gene[1], 50));
 
+			var fileName = path.dirname(pathToGene) + "/" + path.basename(pathToGene, ".fa") + ".lf.fa";
 			var preparedGeneFile = fs.openSync(path.dirname(pathToGene) + "/" + path.basename(pathToGene, ".fa") + ".lf.fa", "w");
 			fs.writeSync(preparedGeneFile, output.join(""));
 			fs.closeSync(preparedGeneFile);
 
-//			fs.writeFileSync(, {encoding: "ascii"});
-			//var output = fs.createWriteStream(path.dirname(pathToGene) + "/" + path.basename(pathToGene, ".fa") + ".lf.fa", {encoding: "ascii"});
+			callback(null, path.resolve(fileName));
 			
 		}
 		else {
