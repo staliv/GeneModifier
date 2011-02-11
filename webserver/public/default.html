@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Gene Modifier</title>
+		<link rel="stylesheet" href="/stylesheets/jquery.mobile-1.0a3.min.css" />
+		<script type="application/javascript" src="/javascripts/jquery-1.5.min.js"></script>
+		<script type="application/javascript" src="/javascripts/jquery.mobile-1.0a3.min.js"></script>
+		<script type="application/javascript" src="/javascripts/genemodifier.js"></script>
+
+	</head>
+	<body>
+		<div data-role="page" id="main" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Gene Modifier</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul data-role="listview" data-theme="c" data-dividertheme="b" data-inset="true">
+					<li data-role="list-divider">Genes</li>
+					<li><a href="#modifyGene">Modify a gene</a></li>
+					<li><a href="#combineGenes">Combine genes</a></li>
+				</ul>
+				<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
+					<li data-role="list-divider">Alignment</li>
+					<li><a href="#runAlignment">Run alignment</a></li>
+					<li><a href="#rewriteSAM">Rewrite SAM</a></li>
+
+					<li><a href="resources.html">Resources</a></li>
+				</ul>
+
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+		
+		
+		<div data-role="page" id="modifyGene" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Modify a gene</h1>
+			</div>
+		
+			<div data-role="content">	
+				<form action="/modifygene" method="post">
+				<div data-role="fieldcontain" >
+					<label for="selectGene" class="select">Select gene to modify:</label>
+					<select name="selectGene" id="selectGene" data-theme="c">
+					</select>
+				</div>
+				<div data-role="fieldcontain" >
+					<label for="selectChangeset" class="select">Select changeset to modify gene with:</label>
+					<select name="selectChangeset" id="selectChangeset" data-theme="c">
+					</select>
+				</div>
+				<div data-role="fieldcontain" >
+					<button type="submit" type="submit" data-theme="a" name="submit" value="submit-value">Modify</button>
+				</div>
+				</form>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="genes" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Installed genes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="geneList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="modifiedGenes" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Modified genes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="modifiedGeneList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="chromosomes" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Chromosomes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="chromosomeList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="logs" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Logs</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="logList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+	</body>
+</html>

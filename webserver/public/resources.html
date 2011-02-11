@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Resources - Gene Modifier</title>
+<!--		<link rel="stylesheet" href="/stylesheets/screen.css" /> -->
+		<link rel="stylesheet" href="/stylesheets/jquery.mobile-1.0a3.min.css" />
+<!--		<link rel="stylesheet" href="/stylesheets/ui-lightness/jquery-ui-1.8.9.custom.css"/> -->
+		<script type="application/javascript" src="/javascripts/jquery-1.5.min.js"></script>
+		<script type="application/javascript" src="/javascripts/jquery.mobile-1.0a3.min.js"></script>
+<!--		<script type="application/javascript" src="/javascripts/jquery-ui-1.8.9.custom.min.js"></script> -->
+		<script type="application/javascript" src="/javascripts/genemodifier.js"></script>
+
+	</head>
+	<body>
+		<div data-role="page" id="main" data-theme="b">
+		
+			<div data-role="header">
+				<h1>Resources</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul data-role="listview" data-theme="c" data-dividertheme="b" data-inset="true">
+					<li><a href="#changeSets">Changesets</a></li>
+					<li><a href="#genes">Installed genes</a></li>
+					<li><a href="#modifiedGenes">Modified genes</a></li>
+					<li><a href="#chromosomes">Installed chromosomes</a></li>
+					<li><a href="#logs">Logs</a></li>
+				</ul>
+
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+		
+		
+		<div data-role="page" id="changeSets" data-theme="b"  data-dividertheme="b" data-inset="true">
+		
+			<div data-role="header">
+				<h1>Changesets</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="changeSetList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="genes" data-theme="b" data-dividertheme="b" data-inset="true">
+		
+			<div data-role="header">
+				<h1>Installed genes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="geneList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="modifiedGenes" data-theme="b" data-dividertheme="b" data-inset="true">
+		
+			<div data-role="header">
+				<h1>Modified genes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="modifiedGeneList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="chromosomes" data-theme="b" data-dividertheme="b" data-inset="true">
+		
+			<div data-role="header">
+				<h1>Chromosomes</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="chromosomeList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+		<div data-role="page" id="logs" data-theme="b" data-dividertheme="b" data-inset="true">
+		
+			<div data-role="header">
+				<h1>Logs</h1>
+			</div>
+		
+			<div data-role="content">	
+				<ul id="logList" data-role="listview" data-theme="c"></ul>
+			</div>
+		
+			<div data-role="footer">
+				<h4>Page Footer</h4>
+			</div>
+		</div>
+
+	</body>
+</html>
