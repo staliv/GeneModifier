@@ -62,11 +62,25 @@ function rewriteSAM(samFilePath) {
 				}
 			}
 
+			//Keys must be sorted according to chromosome name
+			var sortKeys = function(a, b) {
+				var chromosomeNameA = a.split("::")[1].split(":")[0].toLowerCase(), chromosomeNameB = b.split("::")[1].split(":")[0].toLowerCase();
+				
+				if (chromosomeNameA < chromosomeNameB) {
+					return -1;
+				}
+				if (chromosomeNameA > chromosomeNameB) {
+					return 1;
+				}
+				return 0;
+			}
+
+			keysArray.sort(sortKeys);
+
 			//Get chromosome size for each key
 			getChromosomeSizes(keysArray, keys, function(keys) {
 				//console.dir(keys);
 				
-				//TODO: Keys must be sorted according to chromosome name
 				for (var i = 0; i < keysArray.length; i++) {
 					output.push("@SQ\tSN:" + keys[keysArray[i]].chromosome + "\tLN:" + keys[keysArray[i]].chromosomeSize);
 				}
@@ -121,6 +135,7 @@ function parseLine(line, keys, next) {
 	var modifiedLine = [];
 	var key = keys[line[2]];
 	var noReturn = false;
+	var isReverseComplemented = (line[1] & 16);
 
 	//QNAME is always the same
 	modifiedLine.push(line[0]);
@@ -158,7 +173,7 @@ function parseLine(line, keys, next) {
 		if (changes.length > 0) {
 		
 			//Create file containing reference genome that matches the first position of the modified genome
-			var reference = createReferenceFile(line[9], key, referencePosition);
+			var reference = createReferenceFile(line[9], key.chromosome, referencePosition);
 			//Create file containing the sequence that is aligned
 			var sequenceFileName = "./tmp/seq_" + line[9] + "_" + new Date().getTime() + ".fa";
 			var sequenceFile = fs.openSync(sequenceFileName, "w");
@@ -172,6 +187,7 @@ function parseLine(line, keys, next) {
 //			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 --ryo \"%V{%Pqs %Pts\n}\" " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
 			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
 
+//				sys.puts(stdout);
 				var alignment = stdout.split("\n");
 				var cigar = "", oldCigar = line[5];
 				var rawScore = "";
@@ -237,6 +253,8 @@ function parseLine(line, keys, next) {
 					modifiedLine.push("MD:Z:75");
 				}
 			
+				var XA = null;
+			
 				//Handle optional fields
 				for (var i = 11; i < line.length; i++) {
 					var tag = line[i].split(":")[0];
@@ -245,6 +263,7 @@ function parseLine(line, keys, next) {
 						//TODO: Alternative hits; format: (chr,pos,CIGAR,NM;)?
 						case 'XA':
 							//TODO: Must calculate XA!
+							XA = line[i];
 //							modifiedLine.push(line[i]);
 							break;
 						//Do not add edit distance here
@@ -263,8 +282,8 @@ function parseLine(line, keys, next) {
 					}
 				}
 
+				
 				modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(oldCigar, oldMismatches));
-
 
 				//Debug
 /*				if (cigar !== "75M") {
@@ -275,7 +294,15 @@ function parseLine(line, keys, next) {
 					next("");
 				}
 */
+/*				if (XA) {
+					rewriteAltHits(XA, line[9], isReverseComplemented, function (error, altHits) {
+						modifiedLine.push("XA:Z:" + altHits);
+						next(modifiedLine.join("\t"));
+					});
+				} else {
+*/
 				next(modifiedLine.join("\t"));
+//				}
 
 			});			
 
@@ -300,6 +327,8 @@ function parseLine(line, keys, next) {
 		
 			//QUAL stays the same
 			modifiedLine.push(line[10]);
+
+			var XA = null;
 		
 			//Handle optional fields
 			for (var i = 11; i < line.length; i++) {
@@ -308,9 +337,10 @@ function parseLine(line, keys, next) {
 				switch (tag) {
 					//TODO: Alternative hits; format: (chr,pos,CIGAR,NM;)?
 					case 'XA':
-						modifiedLine.push(line[i]);
+						XA = line[i];
+//						modifiedLine.push("XA:Z:" + rewriteAltHits(line[i], line[9]));
 						break;
-					//TODO: Edit distance; should match the number of changes made to accept the sequence
+					//Edit distance; should match the number of changes made to accept the sequence
 					case 'NM':
 						modifiedLine.push(line[i]);
 						break;
@@ -328,8 +358,16 @@ function parseLine(line, keys, next) {
 			}
 
 			modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(line[5], oldMismatches));
-			
+
+/*			if (XA) {
+				rewriteAltHits(XA, line[9], isReverseComplemented, function (error, altHits) {
+					modifiedLine.push("XA:Z:" + altHits);
+					next(modifiedLine.join("\t"));
+				});
+			} else {
+*/
 			next(modifiedLine.join("\t")); //"\n"
+//			}
 //			next(""); //"\n"
 
 		}
@@ -338,27 +376,105 @@ function parseLine(line, keys, next) {
 	});
 }
 
-function getAlignmentScore(cigar, mismatches) {
+function rewriteAltHits(altDescription, sequence, isReverseComplemented, callback) {
 
-	var matchScore = 1;
-	var firstDeletionPenalty = -5;
-	var deletionPenalty = -2;
-	var firstInsertionPenalty = -5;
-	var insertionPenalty = -2;
-	var mismatchPenalty = -2;
+	var alternativeHits = altDescription.substr(5, altDescription.length - 5).split(";");
+	var altConcat = [];
 	
-	//Find matches from cigar = base score to subtract from
-	var match = cigar.split("M");
-	for (var i = 0; i < match.length; i++) {
+	//Alternative hits; format: (geneName::chromosomeName:chromosomeIntervalStart-End::changeset.cs,pos,CIGAR,Edit distance;)
+	
+	for (var i = 0; i < alternativeHits.length - 1; i++) {
+		var geneName = alternativeHits[i].split(",")[0].split("::")[0];
+		var chromosomeName = alternativeHits[i].split(",")[0].split("::")[1].split(":")[0];
+		var startPosition = parseFloat(alternativeHits[i].split(",")[0].split("::")[1].split(":")[1].split("-")[0]);
+		var changeSetName = alternativeHits[i].split(",")[0].split("::")[2];
+		var oldPosition = parseFloat(alternativeHits[i].split(",")[1]) - 1;
+		var negativeStrand = false;
+		if (oldPosition < 0) {
+			negativeStrand = true;
+			oldPosition = oldPosition * (-1);
+//			oldPosition = parseFloat(alternativeHits[i].split(",")[0].split("::")[1].split(":")[1].split("-")[1]) - oldPosition - sequence.length;
+			oldPosition = oldPosition + startPosition;
+		} else {
+			oldPosition = oldPosition + startPosition;
+		}
+		
+		//Backmap position
+		positionBackMapper.backMap("genes/modified/" + geneName + "_" + changeSetName + ".fa", oldPosition, function(error, referencePosition) {
+
+			if (error) { throw error;}
+
+			//Create files for exonerate
+			//Create file containing reference genome that matches the first position of the modified genome
+			var reference = createReferenceFile(sequence, chromosomeName, referencePosition, negativeStrand, isReverseComplemented);
+			//Create file containing the sequence that is aligned
+			var sequenceFileName = "./tmp/seq_" + sequence + "_" + new Date().getTime() + ".fa";
+			var sequenceFile = fs.openSync(sequenceFileName, "w");
+
+			fs.writeSync(sequenceFile, ">Sequence\n" + sequence, 0, "ascii");
+			fs.closeSync(sequenceFile);
+
+			//Run exonerate to calculate edit distance
+			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
+
+				//Remove the temporary files
+				fs.unlinkSync(reference.fileName);
+				fs.unlinkSync(sequenceFileName);
+
+//				sys.puts(stdout);
+
+				var alignment = stdout.split("\n");
+				var cigar = "";
+				var rawScore = "";
+				var editDistance = 0;
+				var mismatches = "", oldMismatches = null;
+				var exonerateSequence = "", exonerateReference = "";
+				
+				for (var i = 0; i < alignment.length; i++) {
+					if (alignment[i].indexOf("Raw score: ") !== -1) {
+						rawScore = alignment[i].split(": ")[1];
+					}
+					if (alignment[i].indexOf("cigar:") !== -1) {
+						cigar = alignment[i].split(rawScore)[1].replace(/ /g, "");
+						cigar = reverseCIGAR(cigar);
+						break;
+					}
+					if (alignment[i].substr(0, 5) === "  1 :") {
+						if (exonerateSequence === "") {
+							exonerateSequence += alignment[i].substr(6, alignment[i].lastIndexOf(":") - 7);
+							exonerateSequence += alignment[i + 4].substr(6, alignment[i + 4].lastIndexOf(":") - 7);
+						} else {
+							exonerateReference += alignment[i].substr(6, alignment[i].lastIndexOf(":") - 7);
+							exonerateReference += alignment[i + 4].substr(6, alignment[i + 4].lastIndexOf(":") - 7);
+						}
+						mismatches += alignment[i + 1].substr(6, alignment[i + 1].length - 6);
+						mismatches += alignment[i + 5].substr(6, alignment[i + 5].length - 6);
+					}
+					
+				}
+				
+//				if (cigar === "") {
+					sys.puts("oldPosition: " + oldPosition);
+					sys.puts("referencePosition: " + referencePosition);
+//				}
+				
+				var editDistance = calculateEditDistance(sequence, reference.sequence);
+				
+				altConcat.push(chromosomeName + "," + (referencePosition + 1) + "," + cigar + "," + editDistance);
+				
+				if (altConcat.length >= alternativeHits.length - 1) {
+					//Returns format: (chr,pos,CIGAR,NM;)
+					callback(null, altConcat.join(";"));
+				}
+				
+			});
+		
+		});
 		
 	}
-
-	//Find deletions and inesertions
 	
-	if (mismatches !== "") {
-		//Find substituted base pairs and subtract 2 for each substitution
-	}
 }
+
 
 function calculateMismatches(mismatches, sequence, reference) {
 
@@ -473,18 +589,25 @@ getSmallestValue = function(x,y,z) {
 	return z;
 }
 
-function createReferenceFile(sequence, key, referencePosition) {
+function createReferenceFile(sequence, chromosomeName, referencePosition, negativeStrand, isReverseComplemented) {
 
 	//Reference position should be 0-based
-	var headerLength = (">" + key.chromosome).length + 1;
+	var headerLength = (">" + chromosomeName).length + 1;
 	var start = referencePosition + getNrOfLineBreaks(referencePosition) + headerLength;
 	var end = referencePosition + sequence.length + getNrOfLineBreaks(referencePosition + sequence.length) + headerLength;
 
-	var chromosomeFile = fs.openSync("./chromosomes/" + key.chromosome + ".fa", "r");
+	var chromosomeFile = fs.openSync("./chromosomes/" + chromosomeName + ".fa", "r");
 	var referenceSequence = fs.readSync(chromosomeFile, end - start, start, "ascii")[0].replace(/\n/g, "").toUpperCase();
 	fs.closeSync(chromosomeFile);
+	
+	sys.puts("isREV: " + isReverseComplemented);
 
-	var referenceFileName = "./tmp/ref_" + sequence + "_" + new Date().getTime() + ".fa";
+	if (negativeStrand !== undefined && negativeStrand === true && !isReverseComplemented) {
+		sys.puts("ReverseComplement")
+		referenceSequence = reverseComplement(referenceSequence);
+	}
+
+	var referenceFileName = "./tmp/ref_" + referenceSequence + "_" + new Date().getTime() + ".fa";
 	var referenceFile = fs.openSync(referenceFileName, "w");
 	fs.writeSync(referenceFile, ">Reference\n" + referenceSequence, 0, "ascii");
 	fs.closeSync(referenceFile);
@@ -492,6 +615,11 @@ function createReferenceFile(sequence, key, referencePosition) {
 	return {"fileName": referenceFileName, "sequence": referenceSequence};
 }
 
+function reverseComplement(sequence) {
+	sequence = complement(sequence);
+	sequence = sequence.split("").reverse().join("");
+	return sequence;
+}
 
 function getNrOfLineBreaks(number, charsPerLine) {
 	charsPerLine = (charsPerLine === undefined) ? 50: charsPerLine;
@@ -569,4 +697,67 @@ function getChromosomeSize(chromosomeName, databaseName, next) {
 			next(0);
 		}
 	});
+}
+
+function complement(dnaSequence)	{
+	//there is no tr operator
+	//should write a tr method to replace this
+	dnaSequence = dnaSequence.replace(/g/g,"1");
+	dnaSequence = dnaSequence.replace(/c/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"c");
+	dnaSequence = dnaSequence.replace(/2/g,"g");
+	dnaSequence = dnaSequence.replace(/G/g,"1");
+	dnaSequence = dnaSequence.replace(/C/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"C");
+	dnaSequence = dnaSequence.replace(/2/g,"G");	
+
+	dnaSequence = dnaSequence.replace(/a/g,"1");
+	dnaSequence = dnaSequence.replace(/t/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"t");
+	dnaSequence = dnaSequence.replace(/2/g,"a");
+	dnaSequence = dnaSequence.replace(/A/g,"1");
+	dnaSequence = dnaSequence.replace(/T/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"T");
+	dnaSequence = dnaSequence.replace(/2/g,"A");
+
+	dnaSequence = dnaSequence.replace(/u/g,"a");
+	dnaSequence = dnaSequence.replace(/U/g,"A");
+
+	dnaSequence = dnaSequence.replace(/r/g,"1");
+	dnaSequence = dnaSequence.replace(/y/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"y");
+	dnaSequence = dnaSequence.replace(/2/g,"r");
+	dnaSequence = dnaSequence.replace(/R/g,"1");
+	dnaSequence = dnaSequence.replace(/Y/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"Y");
+	dnaSequence = dnaSequence.replace(/2/g,"R");	
+
+	dnaSequence = dnaSequence.replace(/k/g,"1");
+	dnaSequence = dnaSequence.replace(/m/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"m");
+	dnaSequence = dnaSequence.replace(/2/g,"k");
+	dnaSequence = dnaSequence.replace(/K/g,"1");
+	dnaSequence = dnaSequence.replace(/M/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"M");
+	dnaSequence = dnaSequence.replace(/2/g,"K");
+
+	dnaSequence = dnaSequence.replace(/b/g,"1");
+	dnaSequence = dnaSequence.replace(/v/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"v");
+	dnaSequence = dnaSequence.replace(/2/g,"b");
+	dnaSequence = dnaSequence.replace(/B/g,"1");
+	dnaSequence = dnaSequence.replace(/V/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"V");
+	dnaSequence = dnaSequence.replace(/2/g,"B");
+
+	dnaSequence = dnaSequence.replace(/d/g,"1");
+	dnaSequence = dnaSequence.replace(/h/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"h");
+	dnaSequence = dnaSequence.replace(/2/g,"d");
+	dnaSequence = dnaSequence.replace(/D/g,"1");
+	dnaSequence = dnaSequence.replace(/H/g,"2");
+	dnaSequence = dnaSequence.replace(/1/g,"H");
+	dnaSequence = dnaSequence.replace(/2/g,"D");
+		
+	return dnaSequence;
 }
