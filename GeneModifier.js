@@ -280,10 +280,10 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					output.push(change);
 					//Mark insertions back to where the insertion started
 					var backMapPosition = offsetDescriptor[offsetDescriptor.length - 1][1] - change.length;
-					for (var x = 0; x < change.length; x++) {
-						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength + x - change.length, backMapPosition]);
+//					for (var x = 0; x < change.length; x++) {
+//						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength + x - change.length, backMapPosition]);
 //						insertionsLength++;
-					}
+//					}
 					for (var x = 0; x < change.length; x++) {
 						offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, backMapPosition]);
 						insertionsLength++;
