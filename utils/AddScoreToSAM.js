@@ -20,7 +20,7 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 1
 				sys.puts(error.message);
 				return;
 			}
-			sys.puts(message);
+			//sys.puts(message);
 		});
 	}
 }
