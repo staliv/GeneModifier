@@ -37,13 +37,13 @@ function keepBestMatch(samFilePath) {
 			var line = null;
 			var previousLines = [];
 			
-			while (lineReader.hasNextLine()) {
+			while (true) {
 				line = lineReader.nextLine();
 				if (line.substr(0,3) === "@SQ") {
 					sys.puts(line);
 				} else {
 					var readId = line.substr(0, line.indexOf("\t"));
-					var score = line.substr(line.indexOf("YM:i:"), 7);
+					var score = parseFloat(line.substr(line.indexOf("YM:i:") + 5, 2));
 					if (previousLines.length === 0) {
 						//Push a new compare object
 						previousLines.push({"id": readId, "score": score, "line": line});
@@ -52,31 +52,43 @@ function keepBestMatch(samFilePath) {
 						previousLines.push({"id": readId, "score": score, "line": line});
 					} else if (previousLines[0].id !== readId) {
 						//Compare previous objects
-						if (previousLines.length >= 2) {
-							//Sort based on score
-							previousLines.sort(sortLines);
-							//Keep the best one, i.e. the first one
-							var keep = previousLines[0];
-							
-							//Check for alternative hits in the other matches with same score
-							for (var x = 1; x < previousLines.length; x++) {
-								if (previousLines[x].score === keep.score && previousLines[x].line.indexOf("XA:Z:") > -1) {
-									keep = addAltHits(keep, previousLines[x]);
-								}
-							}
-							//Output best match
-							sys.puts(keep.line);
-						} else {
-							//Only one match
-							sys.puts(line);
-						}
+						compareAndOutput(previousLines);
 						//Empty the array
-						previousLines = []
+						previousLines = [];
+    					//Push current line as new compare object
+	                    previousLines.push({"id": readId, "score": score, "line": line});
 					}
 				}
+				if (!lineReader.hasNextLine()) {
+					//Last line should be compared
+					compareAndOutput(previousLines);
+					break;
+				}
 			}
+			callback(null, "Done");
 		}
 	});
+}
+
+function compareAndOutput(previousLines) {
+	if (previousLines.length >= 2) {
+		//Sort based on score
+		previousLines.sort(sortLines);
+		//Keep the best one, i.e. the first one
+		var keep = previousLines[0];
+		
+		//Check for alternative hits in the other matches with same score
+		for (var x = 1; x < previousLines.length; x++) {
+			if (previousLines[x].score === keep.score && previousLines[x].line.indexOf("XA:Z:") > -1) {
+				keep = addAltHits(keep, previousLines[x]);
+			}
+		}
+		//Output best match
+		sys.puts(keep.line);
+	} else {
+		//Only one match
+		sys.puts(previousLines[0].line);
+	}
 }
 
 function addAltHits(keep, other) {
