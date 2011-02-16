@@ -173,12 +173,10 @@ function parseLine(line, keys, next) {
 		if (changes.length > 0) {
 		
 			//Create file containing reference genome that matches the first position of the modified genome
-			var reference = createReferenceFile(line[9], key.chromosome, referencePosition);
+			var reference = createReferenceFile(line[9], key.chromosome, referencePosition, changes);
 			//Create file containing the sequence that is aligned
 			var sequenceFileName = "./tmp/seq_" + line[9] + "_" + new Date().getTime() + ".fa";
 			var sequenceFile = fs.openSync(sequenceFileName, "w");
-
-			//TODO: if (line[1] & 16) then reverse complement
 
 			fs.writeSync(sequenceFile, ">Sequence\n" + line[9], 0, "ascii");
 			fs.closeSync(sequenceFile);
@@ -186,6 +184,11 @@ function parseLine(line, keys, next) {
 			//Call exonerate and fetch CIGAR
 //			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 --ryo \"%V{%Pqs %Pts\n}\" " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
 			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
+
+				if (error) {
+					//Breakpoint insertion for debugging
+					error = error;
+				}
 
 //				sys.puts(stdout);
 				var alignment = stdout.split("\n");
@@ -346,6 +349,7 @@ function parseLine(line, keys, next) {
 						break;
 					//TODO: Mismatching positions/bases should be modified
 					case 'MD':
+						//Fetch mismatches for calculating score
 						oldMismatches = line[i].split(":");
 						oldMismatches = oldMismatches[oldMismatches.length - 1];
 						modifiedLine.push(line[i]);
@@ -357,6 +361,7 @@ function parseLine(line, keys, next) {
 				}
 			}
 
+			//Output score to current line
 			modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(line[5], oldMismatches));
 
 /*			if (XA) {
@@ -375,7 +380,7 @@ function parseLine(line, keys, next) {
 	
 	});
 }
-
+/*
 function rewriteAltHits(altDescription, sequence, isReverseComplemented, callback) {
 
 	var alternativeHits = altDescription.substr(5, altDescription.length - 5).split(";");
@@ -474,13 +479,9 @@ function rewriteAltHits(altDescription, sequence, isReverseComplemented, callbac
 	}
 	
 }
-
+*/
 
 function calculateMismatches(mismatches, sequence, reference) {
-
-//	sys.puts("Sequence:   " + sequence);
-//	sys.puts("Mismatches: " + mismatches);
-//	sys.puts("Reference:  " + reference);
 
 	var matches = 0;
 	var newMismatches = [];
@@ -519,6 +520,10 @@ function calculateMismatches(mismatches, sequence, reference) {
 	if (matches > 0) {
 		newMismatches.push(matches);
 	}
+	if (newMismatches.length === 0) {
+		newMismatches.push(0);
+	}
+
 	return newMismatches.join("");
 
 }
@@ -589,24 +594,31 @@ getSmallestValue = function(x,y,z) {
 	return z;
 }
 
-function createReferenceFile(sequence, chromosomeName, referencePosition, negativeStrand, isReverseComplemented) {
+function createReferenceFile(sequence, chromosomeName, referencePosition, changes) {
 
+	var insertionsLength = 0;
+	var deletionsLength = 0;
+
+	//Take into account the indels that are applied to this region	
+	for (var i = 0; i < changes.length; i++) {
+		if (changes[i][3].substr(0, 1) === "I") {
+			insertionsLength += changes[i][3].split("-")[1].length;
+		}
+		if (changes[i][3].substr(0, 1) === "D") { 
+			deletionsLength += (parseFloat(changes[i][2]) - parseFloat(changes[i][1]));
+		}
+	}
+
+	var readLength = sequence.length - insertionsLength + deletionsLength;
 	//Reference position should be 0-based
 	var headerLength = (">" + chromosomeName).length + 1;
 	var start = referencePosition + getNrOfLineBreaks(referencePosition) + headerLength;
-	var end = referencePosition + sequence.length + getNrOfLineBreaks(referencePosition + sequence.length) + headerLength;
+	var end = referencePosition + readLength + getNrOfLineBreaks(referencePosition + readLength) + headerLength;
 
 	var chromosomeFile = fs.openSync("./chromosomes/" + chromosomeName + ".fa", "r");
 	var referenceSequence = fs.readSync(chromosomeFile, end - start, start, "ascii")[0].replace(/\n/g, "").toUpperCase();
 	fs.closeSync(chromosomeFile);
 	
-	sys.puts("isREV: " + isReverseComplemented);
-
-	if (negativeStrand !== undefined && negativeStrand === true && !isReverseComplemented) {
-		sys.puts("ReverseComplement")
-		referenceSequence = reverseComplement(referenceSequence);
-	}
-
 	var referenceFileName = "./tmp/ref_" + referenceSequence + "_" + new Date().getTime() + ".fa";
 	var referenceFile = fs.openSync(referenceFileName, "w");
 	fs.writeSync(referenceFile, ">Reference\n" + referenceSequence, 0, "ascii");
