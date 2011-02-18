@@ -61,7 +61,6 @@ function rewriteSAM(samFilePath) {
 					keysArray.push(key);
 				} else if (line.substr(0,3) === "@PG" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD") {
 					//Do nothing
-				}
 				} else {
 					//Break after reading keys
 					break;
