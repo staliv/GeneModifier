@@ -92,7 +92,7 @@ function rewriteSAM(samFilePath) {
 
 				var count = 0;
 				
-				sys.puts(output.join("\n"));
+				//sys.puts(output.join("\n"));
 				
 				while (true) {
 					line = line.split("\t");
