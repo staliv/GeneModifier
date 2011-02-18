@@ -192,10 +192,11 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 		console.log("Finished extracting headers.");
 		
 		console.log("Add headers to rewritten SAM...");
-		exec("cat " + headers + " " + rewrittenSAMPath + " > " + rewrittenSAMPath, function(error, stdout, stderr) {
+		var withHeadersPath = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".headers.sam";
+		exec("cat " + headers + " " + rewrittenSAMPath + " > " + withHeadersPath, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
+			rewrittenSAMPath = withHeadersPath;
 			console.log("Finished adding headers to  " + rewrittenSAMPath + "...");
-
 	
 			console.log("Convert rewritten SAM to BAM...");
 			var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
