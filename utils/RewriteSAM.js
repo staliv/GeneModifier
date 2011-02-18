@@ -87,7 +87,7 @@ function rewriteSAM(samFilePath) {
 				//console.dir(keys);
 				
 				for (var i = 0; i < keysArray.length; i++) {
-					output.push("@SQ\tSN:" + keys[keysArray[i]].chromosome + "\tLN:" + keys[keysArray[i]].chromosomeSize);
+					//output.push("@SQ\tSN:" + keys[keysArray[i]].chromosome + "\tLN:" + keys[keysArray[i]].chromosomeSize);
 				}
 
 				var count = 0;
