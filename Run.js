@@ -6,17 +6,19 @@ var sys = require("sys");
 var exec = require("child_process").exec;
 var geneModifier = require("./GeneModifier");
 var rewriteSAM = require("./utils/RewriteSAM");
+var settings = require("./settings").settings;
 
-var log4js = require("log4js")();
+var log4js = require("./node_modules/log4js")();
 log4js.configure("./logs/config.json");
 
-var samtools = "samtools";
-var bwa = "bwa";
+var samtools = settings.samtools;
+var bwa = settings.bwa;
+var node = settings.node;
+var resultsDir = settings.resultsPath; //Must already exist
+var genomesDir = settings.modifiedGenomesPath; //Must already exist
+var referenceGenome = settings.referenceGenomePath; //Must already exist
+
 var cores = require("os").cpus().length;
-var node = "node";
-var resultsDir = "./tmp/results/"; //Must already exist
-var genomesDir = "./tmp/genomes/"; //Must already exist
-var referenceGenome = "./tmp/genomes/reference/BRCAChromosomes.fa"; //Must already exist
 
 //Accepts runs a complete batch
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7, process.argv[1].length) === "/Run.js") {

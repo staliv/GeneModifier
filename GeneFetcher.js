@@ -5,7 +5,7 @@ var http = require("http");
 var path = require("path");
 var sys = require("sys");
 
-var log4js = require("log4js")();
+var log4js = require("./node_modules/log4js")();
 log4js.configure("./logs/config.json");
 
 //Accepts the name of the gene from command line

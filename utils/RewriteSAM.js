@@ -7,8 +7,9 @@ var fileLineReader = require("./FileLineReader");
 var scoreCalculator = require("./CalculateAlignmentScore");
 var positionBackMapper = require("../PositionBackMapper");
 var exec = require("child_process").exec;
+var settings = require("../settings").settings;
 
-var exonerate = "exonerate";
+var exonerate = settings.exonerate;
 
 //var log4js = require("log4js")();
 //log4js.configure("../logs/config.json");

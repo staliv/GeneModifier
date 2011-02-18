@@ -6,7 +6,7 @@ var sys = require("sys");
 var scoreCalculator = require("./CalculateAlignmentScore");
 var fileLineReader = require("./FileLineReader");
 
-var log4js = require("log4js")();
+var log4js = require("../node_modules/log4js")();
 log4js.configure("logs/config.json");
 
 //Accepts the sam path from command line
