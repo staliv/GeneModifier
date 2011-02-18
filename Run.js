@@ -184,59 +184,73 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 	var doneSortingRewritten = null;
 	var doneSortingReference = null;
 
-	console.log("Convert rewritten SAM to BAM...");
-	var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
-	exec(samtools + " view -S -b -t -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
+	//Add headers from reference sam to rewritten sam
+	var headers = path.dirname(referenceSAMPath) + "/SAMHeaders.sam";
+	console.log("Extract headers from " + referenceSAMPath + "...");
+	exec(samtools + " view -S -H -o " + headers + " " + referenceSAMPath, function(error, stdout, stderr) {
 		if (error) { return callback(error); }
-		console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM + ".");
-
-		//Sort
-		var sortedRewrittenBAM = path.dirname(rewrittenBAM) + "/" + path.basename(rewrittenBAM) + ".sorted";
-		exec(samtools + " sort -n " + rewrittenBAM + " " + sortedRewrittenBAM, function(error, stdout, stderr) {
-			if (error) { return callback(error); }
-
-			sortedRewrittenBAM += ".bam";
-			doneSortingRewritten = sortedRewrittenBAM;
-			console.log("Sorted rewritten BAM to " + doneSortingRewritten);
-			
-			if (doneSortingReference) {
-				mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
-					if (error) { return callback(error); }
-					callback(null, message);		
-				});
-			} 
-			
-		});
+		console.log("Finished extracting headers.");
 		
-		
-	});
-
-	console.log("Convert reference SAM to BAM...");
-	var referenceBAM = path.dirname(referenceSAMPath) + "/" + path.basename(referenceSAMPath, ".sam") + ".bam";
-	exec(samtools + " view -S -b -h -o " + referenceBAM + " " + referenceSAMPath, function(error, stdout, stderr) {
-		if (error) { return callback(error); }
-		console.log("Finished converting reference SAM to BAM: " + referenceBAM + ".");
-
-		//Sort
-		var sortedReferenceBAM = path.dirname(referenceBAM) + "/" + path.basename(referenceBAM) + ".sorted";
-		exec(samtools + " sort -n " + referenceBAM + " " + sortedReferenceBAM, function(error, stdout, stderr) {
+		console.log("Add headers to rewritten SAM...");
+		exec("cat " + headers + " " + rewrittenSAMPath + " > " + rewrittenSAMPath, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
+			console.log("Finished adding headers to  " + rewrittenSAMPath + "...");
 
-			sortedReferenceBAM += ".bam";
-			doneSortingReference = sortedReferenceBAM;
-			console.log("Sorted reference BAM to " + doneSortingReference);
-			
-			if (doneSortingRewritten) {
-				mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
-					if (error) { return callback(error); }
-					callback(null, message);
-				});
-			} 
-			
-		});
-
-	});
 	
+			console.log("Convert rewritten SAM to BAM...");
+			var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
+			exec(samtools + " view -S -b -h -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
+				if (error) { return callback(error); }
+				console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM + ".");
+		
+				//Sort
+				var sortedRewrittenBAM = path.dirname(rewrittenBAM) + "/" + path.basename(rewrittenBAM, ".bam") + ".sorted";
+				exec(samtools + " sort -n " + rewrittenBAM + " " + sortedRewrittenBAM, function(error, stdout, stderr) {
+					if (error) { return callback(error); }
+		
+					sortedRewrittenBAM += ".bam";
+					doneSortingRewritten = sortedRewrittenBAM;
+					console.log("Sorted rewritten BAM to " + doneSortingRewritten);
+					
+					if (doneSortingReference) {
+						mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
+							if (error) { return callback(error); }
+							callback(null, message);		
+						});
+					} 
+					
+				});
+				
+				
+			});
+		
+			console.log("Convert reference SAM to BAM...");
+			var referenceBAM = path.dirname(referenceSAMPath) + "/" + path.basename(referenceSAMPath, ".sam") + ".bam";
+			exec(samtools + " view -S -b -h -o " + referenceBAM + " " + referenceSAMPath, function(error, stdout, stderr) {
+				if (error) { return callback(error); }
+				console.log("Finished converting reference SAM to BAM: " + referenceBAM + ".");
+		
+				//Sort
+				var sortedReferenceBAM = path.dirname(referenceBAM) + "/" + path.basename(referenceBAM, ".bam") + ".sorted";
+				exec(samtools + " sort -n " + referenceBAM + " " + sortedReferenceBAM, function(error, stdout, stderr) {
+					if (error) { return callback(error); }
+		
+					sortedReferenceBAM += ".bam";
+					doneSortingReference = sortedReferenceBAM;
+					console.log("Sorted reference BAM to " + doneSortingReference);
+					
+					if (doneSortingRewritten) {
+						mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
+							if (error) { return callback(error); }
+							callback(null, message);
+						});
+					} 
+					
+				});
+		
+			});
+		});
+	});	
 }
 
 function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
