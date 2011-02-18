@@ -8,6 +8,8 @@ var scoreCalculator = require("./CalculateAlignmentScore");
 var positionBackMapper = require("../PositionBackMapper");
 var exec = require("child_process").exec;
 
+var exonerate = "exonerate";
+
 //var log4js = require("log4js")();
 //log4js.configure("../logs/config.json");
 
@@ -182,8 +184,7 @@ function parseLine(line, keys, next) {
 			fs.closeSync(sequenceFile);
 
 			//Call exonerate and fetch CIGAR
-//			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 --ryo \"%V{%Pqs %Pts\n}\" " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
-			var child = exec("exonerate -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
+			var child = exec(exonerate + " -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
 
 				if (error) {
 					//Breakpoint insertion for debugging
