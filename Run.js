@@ -55,7 +55,17 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7
 				console.log("Job completed on " + cores + " cores in " + jobTime + " seconds, created: " + message + ".");
 			});
 		} else {
-			sys.puts("Error in command line.")
+			sys.puts("Error in command line when calling Run.js.")
+			if (genes === null) {
+				sys.puts("\t- Genes are not specified")
+			}
+			if (changeset === null) {
+				sys.puts("\t- Changeset is not specified")
+			}
+			if (fastq === null) {
+				sys.puts("\t- FastQ is not specified")
+			}
+				
 		}
 	}
 }
