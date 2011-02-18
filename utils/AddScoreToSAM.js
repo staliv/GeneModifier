@@ -47,7 +47,7 @@ function addScoreToSAM(samFilePath) {
 				var cigar = "",
 					mismatches = null;
 
-				if (line.substr(0, 3) === "@SQ") {
+				if (line.substr(0, 3) === "@SQ" || line.substr(0,3) === "@PG" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD") {
 					sys.puts(line);
 				} else {
 					cigar = splitLine[5];
