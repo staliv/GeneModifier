@@ -186,7 +186,7 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 
 	console.log("Convert rewritten SAM to BAM...");
 	var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
-	exec(samtools + " view -S -b -h -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
+	exec(samtools + " view -S -b -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
 		if (error) { return callback(error); }
 		console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM + ".");
 
