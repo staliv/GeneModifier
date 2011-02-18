@@ -180,7 +180,7 @@ function parseLine(line, keys, next) {
 			//Create file containing reference genome that matches the first position of the modified genome
 			var reference = createReferenceFile(line[9], key.chromosome, referencePosition, changes);
 			//Create file containing the sequence that is aligned
-			var sequenceFileName = "./tmp/seq_" + line[9] + "_" + new Date().getTime() + ".fa";
+			var sequenceFileName = "./tmp/seq_" + line[9] + "_" + getRandomString() + ".fa";
 			var sequenceFile = fs.openSync(sequenceFileName, "w");
 
 			fs.writeSync(sequenceFile, ">Sequence\n" + line[9], 0, "ascii");
@@ -383,6 +383,10 @@ function parseLine(line, keys, next) {
 	
 	
 	});
+}
+
+function getRandomString() {
+	return process.pid + "-" + (Math.random() * 0x100000000 + 1).toString(36);
 }
 /*
 function rewriteAltHits(altDescription, sequence, isReverseComplemented, callback) {
@@ -623,7 +627,7 @@ function createReferenceFile(sequence, chromosomeName, referencePosition, change
 	var referenceSequence = fs.readSync(chromosomeFile, end - start, start, "ascii")[0].replace(/\n/g, "").toUpperCase();
 	fs.closeSync(chromosomeFile);
 	
-	var referenceFileName = "./tmp/ref_" + referenceSequence + "_" + new Date().getTime() + ".fa";
+	var referenceFileName = "./tmp/ref_" + referenceSequence + "_" + getRandomString() + ".fa";
 	var referenceFile = fs.openSync(referenceFileName, "w");
 	fs.writeSync(referenceFile, ">Reference\n" + referenceSequence, 0, "ascii");
 	fs.closeSync(referenceFile);
