@@ -30,8 +30,6 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 1
 	}
 }
 
-exports.rewriteSAM = rewriteSAM;
-
 //Returns callback(error, message)
 function rewriteSAM(samFilePath) {
 
@@ -78,7 +76,7 @@ function rewriteSAM(samFilePath) {
 					return 1;
 				}
 				return 0;
-			}
+			};
 
 			keysArray.sort(sortKeys);
 
@@ -106,7 +104,7 @@ function rewriteSAM(samFilePath) {
 						parseLine(line, keys, function(modifiedLine) {
 //							output.push(modifiedLine);
 							if (modifiedLine !== "") {
-								sys.puts(modifiedLine)
+								sys.puts(modifiedLine);
 							}
 							--count;
 							if (count === 0) {
@@ -185,6 +183,7 @@ function parseLine(line, keys, next) {
 
 			fs.writeSync(sequenceFile, ">Sequence\n" + line[9], 0, "ascii");
 			fs.closeSync(sequenceFile);
+			var editDistance = 0;
 
 			//Call exonerate and fetch CIGAR
 			var child = exec(exonerate + " -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
@@ -198,7 +197,6 @@ function parseLine(line, keys, next) {
 				var alignment = stdout.split("\n");
 				var cigar = "", oldCigar = line[5];
 				var rawScore = "";
-				var editDistance = 0;
 				var mismatches = "", oldMismatches = null;
 				var exonerateSequence = "", exonerateReference = "";
 				
@@ -248,7 +246,7 @@ function parseLine(line, keys, next) {
 				modifiedLine.push(line[10]);
 
 				//EDIT DISTANCE
-				var editDistance = calculateEditDistance(line[9], reference.sequence);
+				editDistance = calculateEditDistance(line[9], reference.sequence);
 				modifiedLine.push("NM:i:" + editDistance);
 
 				var md = "";
@@ -537,7 +535,7 @@ function calculateMismatches(mismatches, sequence, reference) {
 }
 
 function trim(string) {
-    return string.replace(/^\s*|\s*$/, '')
+    return string.replace(/^\s*|\s*$/, '');
 }
 
 function reverseCIGAR(cigar) {
@@ -578,14 +576,14 @@ function calculateEditDistance(sequence, reference) {
 		var o=m;m=n;n=o;
 	}
 	
-	var r = new Array();
-	r[0] = new Array();
+	var r = [];
+	r[0] = [];
 	for (var c = 0; c < n+1; c++) {
 		r[0][c] = c;
 	}
 	
 	for (var i = 1; i < m+1; i++) {
-		r[i] = new Array();
+		r[i] = [];
 		r[i][0] = i;
 		for (var j = 1; j < n+1; j++) {
 			cost = (a.charAt(i-1) == b.charAt(j-1))? 0: 1;
@@ -596,7 +594,7 @@ function calculateEditDistance(sequence, reference) {
 	return r[m][n];
 }
 
-getSmallestValue = function(x,y,z) {
+function getSmallestValue(x,y,z) {
 	if (x < y && x < z) return x;
 	if (y < x && y < z) return y;
 	return z;
@@ -667,10 +665,10 @@ function changesMade(key, position, sequenceLength) {
 		//	AND ((startPosition >= position AND startPosition <= (position + sequenceLength))
 		//	OR (endPosition >= position AND endPosition <= (position + sequenceLength)))
 		
-		if (sets[0] === key.chromosome 
-			&& (
-				(parseFloat(sets[1]) >= position && parseFloat(sets[1]) <= (position + sequenceLength))
-				|| (parseFloat(sets[2]) >= position && parseFloat(sets[2]) <= (position + sequenceLength))
+		if (sets[0] === key.chromosome && 
+				(
+					(parseFloat(sets[1]) >= position && parseFloat(sets[1]) <= (position + sequenceLength)) || 
+					(parseFloat(sets[2]) >= position && parseFloat(sets[2]) <= (position + sequenceLength))
 				)
 			) {
 			changes.push([sets[0], sets[1], sets[2], sets[3]]);
@@ -693,6 +691,7 @@ function getChromosomeSizes(keysArray, keys, next) {
 		});
 	});
 }
+
 
 //Returns callback(chromosomeSize)
 function getChromosomeSize(chromosomeName, databaseName, next) {
@@ -781,3 +780,5 @@ function complement(dnaSequence)	{
 		
 	return dnaSequence;
 }
+
+exports.rewriteSAM = rewriteSAM;
