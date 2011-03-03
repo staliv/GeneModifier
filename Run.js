@@ -138,7 +138,10 @@ function run(genes, changeSet) {
 									if (error) { return callback(error); }
 									callback(message);
 								});
+							} else {
+								console.log("Waiting for reference genome to be ready...");
 							}
+							
 						});
 					});
 				});
@@ -194,6 +197,8 @@ function run(genes, changeSet) {
 								if (error) { return callback(error); }
 								callback(null, message);
 							});
+						}else {
+							console.log("Waiting for SAM to be rewritten...");
 						}
 					});
 				});
