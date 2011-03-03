@@ -157,7 +157,7 @@ function run(genes, changeSet) {
 		
 		path.exists(path.dirname(saiFile), function(exists) {
 			if (!exists) {
-				fs.mkdirSync(path.dirname(saiFile), 700);
+				fs.mkdirSync(path.dirname(saiFile), 0700);
 			}
 
 			console.log("Aligning reference genome with " + fastq + "...");
@@ -540,7 +540,7 @@ function combineGenes(createdFiles, changeSet) {
 
 	path.exists(path.dirname(outputFileName), function(exists) {
 		if (!exists) {
-			fs.mkdirSync(path.dirname(outputFileName), 700);
+			fs.mkdirSync(path.dirname(outputFileName), 0700);
 		}
 
 		var child = exec("cat " + createdFiles.join(" ") + " > " + outputFileName, function (error, stdout, stderr) {
