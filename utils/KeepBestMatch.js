@@ -33,7 +33,7 @@ function keepBestMatch(samFilePath) {
 		if (!exists) {
 			return callback(new Error("The file " + samFilePath + " does not exist."));
 		} else {
-			var lineReader = fileLineReader.FileLineReader(samFilePath);
+			var lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 			var line = null;
 			var previousLines = [];
 			
@@ -55,7 +55,7 @@ function keepBestMatch(samFilePath) {
 						compareAndOutput(previousLines);
 						//Empty the array
 						previousLines = [];
-    					//Push current line as new compare object
+						//Push current line as new compare object
 	                    previousLines.push({"id": readId, "score": score, "line": line});
 					}
 				}
@@ -123,4 +123,4 @@ var sortLines = function(a, b) {
 		return 1;
 	}
 	return 0;
-}
+};

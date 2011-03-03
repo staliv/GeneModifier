@@ -35,7 +35,7 @@ function addScoreToSAM(samFilePath) {
 
 	path.exists(samFilePath, function(exists) {
 		if (exists) {
-			var lineReader = fileLineReader.FileLineReader(samFilePath);
+			var lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 			var line = null,
 				splitLine = [];
 
