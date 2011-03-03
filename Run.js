@@ -11,14 +11,16 @@ var settings = require("./settings").settings;
 var log4js = require("./node_modules/log4js")();
 log4js.configure("./logs/config.json");
 
+var cores = require("os").cpus().length;
+
 var samtools = settings.samtools;
 var bwa = settings.bwa;
 var node = settings.node;
 var resultsDir = settings.resultsPath; //Must already exist
 var genomesDir = settings.modifiedGenomesPath; //Must already exist
 var referenceGenome = settings.referenceGenomePath; //Must already exist
-
-var cores = require("os").cpus().length;
+var removeIntermediateFiles = settings.removeIntermediateFiles; //Removes all files that are not part of the result set
+var gatk = settings.gatk;
 
 //Accepts runs a complete batch
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7, process.argv[1].length) === "/Run.js") {
@@ -40,7 +42,6 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7
 			if (process.argv[i] === "-fq") {
 				fastq = process.argv[i + 1].replace(/\"/g, "");
 			}
-
 		}
 
 		if (genes !== null && changeset !== null && fastq !== null) {
@@ -55,17 +56,16 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7
 				console.log("Job completed on " + cores + " cores in " + jobTime + " seconds, created: " + message + ".");
 			});
 		} else {
-			sys.puts("Error in command line when calling Run.js.")
+			sys.puts("Error in command line when calling Run.js.");
 			if (genes === null) {
-				sys.puts("\t- Genes are not specified")
+				sys.puts("\t- Genes are not specified");
 			}
 			if (changeset === null) {
-				sys.puts("\t- Changeset is not specified")
+				sys.puts("\t- Changeset is not specified");
 			}
 			if (fastq === null) {
-				sys.puts("\t- FastQ is not specified")
+				sys.puts("\t- FastQ is not specified");
 			}
-				
 		}
 	}
 }
@@ -90,10 +90,10 @@ function run(genes, changeSet) {
 		combineGenes(createdFiles, changeSet, function(error, fileName) {
 			
 			//Index with bwa
-			console.log("Begin indexing of modified genome " + fileName + "...")
+			console.log("Begin indexing of modified genome " + fileName + "...");
 			exec(bwa + " index " + fileName, function (error, stdout, stderr) {
 				if (error) { return callback(error); }
-				console.log("Finished indexing modified genome.")
+				console.log("Finished indexing modified genome.");
 				//Align
 				console.log("Aligning modified genome with " + fastq + "...");
 				var saiFile = path.dirname(fileName) + "/" + path.basename(fileName, ".fa") + ".sai";
@@ -105,7 +105,20 @@ function run(genes, changeSet) {
 					var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
 					exec(bwa + " samse " + fileName + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
 						if (error) { return callback(error); }
-						console.log("Finished creating modified SAM with path: " + samFile);
+						console.log("Finished creating modified SAM with path: " + samFile + ".");
+						
+						if (removeIntermediateFiles) {
+							fs.unlinkSync(saiFile);
+							fs.unlinkSync(fileName);
+							fs.unlinkSync(fileName + ".amb");
+							fs.unlinkSync(fileName + ".ann");
+							fs.unlinkSync(fileName + ".bwt");
+							fs.unlinkSync(fileName + ".pac");
+							fs.unlinkSync(fileName + ".rbwt");
+							fs.unlinkSync(fileName + ".rpac");
+							fs.unlinkSync(fileName + ".rsa");
+							fs.unlinkSync(fileName + ".sa");
+						}
 						
 						//Rewrite SAM file
 						console.log("Rewriting modified SAM...");
@@ -113,6 +126,12 @@ function run(genes, changeSet) {
 						exec(node + " utils/RewriteSAM.js " + samFile + " > " + rewrittenSAM, function (error, stdout, stderr) {
 							if (error) { return callback(error); }
 							console.log("Finished rewriting modified SAM to: " + rewrittenSAM + ".");
+
+							if (removeIntermediateFiles){
+								console.log("Removing " + samFile);
+								fs.unlinkSync(samFile);
+							}
+
 							rewrittenSAMPath = rewrittenSAM;
 							if (referenceSAMPath !== null) {
 								continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
@@ -121,9 +140,7 @@ function run(genes, changeSet) {
 								});
 							}
 						});
-						
 					});
-					
 				});
 			});
 		});
@@ -140,7 +157,7 @@ function run(genes, changeSet) {
 		
 		path.exists(path.dirname(saiFile), function(exists) {
 			if (!exists) {
-				fs.mkdirSync(path.dirname(saiFile), 0700);
+				fs.mkdirSync(path.dirname(saiFile), 700);
 			}
 
 			console.log("Aligning reference genome with " + fastq + "...");
@@ -149,31 +166,40 @@ function run(genes, changeSet) {
 				if (error) { return callback(error); }
 				console.log("Finished alignment against reference genome.");
 	
-				console.log("Creating SAM for reference genome...")
+				console.log("Creating SAM for reference genome...");
 				var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
 				exec(bwa + " samse " + referenceGenome + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
 					if (error) { return callback(error); }
-
 					console.log("Finished creating SAM file for reference genome: " + samFile);
+
+					if (removeIntermediateFiles) {
+						console.log("Removing " + saiFile);
+						fs.unlinkSync(saiFile);
+					}
+
 					//Add score to reference alignment
-					console.log("Adding score to reference SAM...")
+					console.log("Adding score to reference SAM...");
 					var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
 					exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, function (error, stdout, stderr) {
 						referenceSAMPath = scoredSAM;
 						console.log("Finished scoring: " + scoredSAM);
+
+						if (removeIntermediateFiles) {
+							console.log("Removing " + samFile);
+							fs.unlinkSync(samFile);
+						}
+						
 						if (rewrittenSAMPath !== null) {
 							continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
 								if (error) { return callback(error); }
 								callback(null, message);
 							});
 						}
-					
 					});
 				});
 			});
 		});		
 //	});
-	
 }
 
 function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
@@ -195,6 +221,14 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 		var withHeadersPath = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".headers.sam";
 		exec("cat " + headers + " " + rewrittenSAMPath + " > " + withHeadersPath, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
+
+			if (removeIntermediateFiles) {
+				console.log("Removing " + headers);
+				fs.unlinkSync(headers);
+				console.log("Removing " + rewrittenSAMPath);
+				fs.unlinkSync(rewrittenSAMPath);
+			}
+			
 			rewrittenSAMPath = withHeadersPath;
 			console.log("Finished adding headers to  " + rewrittenSAMPath + "...");
 	
@@ -203,11 +237,21 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 			exec(samtools + " view -S -b -h -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM + ".");
-		
+
+				if (removeIntermediateFiles) {
+					console.log("Removing " + rewrittenSAMPath);
+					fs.unlinkSync(rewrittenSAMPath);
+				}
+
 				//Sort
 				var sortedRewrittenBAM = path.dirname(rewrittenBAM) + "/" + path.basename(rewrittenBAM, ".bam") + ".sorted";
 				exec(samtools + " sort -n " + rewrittenBAM + " " + sortedRewrittenBAM, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
+
+					if (removeIntermediateFiles) {
+						console.log("Removing " + rewrittenBAM);
+						fs.unlinkSync(rewrittenBAM);
+					}
 		
 					sortedRewrittenBAM += ".bam";
 					doneSortingRewritten = sortedRewrittenBAM;
@@ -216,13 +260,12 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 					if (doneSortingReference) {
 						mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
 							if (error) { return callback(error); }
+
 							callback(null, message);		
 						});
 					} 
 					
 				});
-				
-				
 			});
 		
 			console.log("Convert reference SAM to BAM...");
@@ -231,33 +274,48 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 				if (error) { return callback(error); }
 				console.log("Finished converting reference SAM to BAM: " + referenceBAM + ".");
 		
+				if (removeIntermediateFiles) {
+					console.log("Removing " + referenceSAMPath);
+					fs.unlinkSync(referenceSAMPath);
+				}
+		
 				//Sort
+				console.log("Sorting reference BAM...");
 				var sortedReferenceBAM = path.dirname(referenceBAM) + "/" + path.basename(referenceBAM, ".bam") + ".sorted";
 				exec(samtools + " sort -n " + referenceBAM + " " + sortedReferenceBAM, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 		
 					sortedReferenceBAM += ".bam";
+
+					if (removeIntermediateFiles) {
+						console.log("Removing " + referenceBAM);
+						fs.unlinkSync(referenceBAM);
+					}
+
+					console.log("Sorted reference BAM to: " + sortedReferenceBAM);
+
 					doneSortingReference = sortedReferenceBAM;
-					console.log("Sorted reference BAM to " + doneSortingReference);
-					
+
 					if (doneSortingRewritten) {
 						mergeAndKeep(doneSortingRewritten, doneSortingReference, referenceSAMPath, function(error, message) {
 							if (error) { return callback(error); }
 							callback(null, message);
 						});
 					} 
-					
 				});
-		
 			});
 		});
 	});	
 }
 
+
 function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
 
 	var callback = arguments[arguments.length - 1];
 	if (typeof(callback) !== 'function') callback = function(){};
+
+	var referenceBAMFinished = null;
+	var modifiedBAMFinished = null;
 
 	//Merge bam files
 	console.log("Merging BAM files...");
@@ -266,13 +324,52 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
 	exec(samtools + " merge -rn " + mergedFile + " " + referenceBAM + " " + rewrittenBAM, function(error, stdout, stderr) {
 		if (error) { return callback(error); }
 		console.log("Finished merging BAM files to: " + mergedFile);
-		
+
+		if (removeIntermediateFiles) {
+			console.log("Removing " + rewrittenBAM);
+			fs.unlinkSync(rewrittenBAM);
+		}
+
+		//Sort
+		console.log("Classic sorting of reference BAM...");
+		var sortedReferenceBAM = path.dirname(referenceBAM) + "/" + path.basename(referenceBAM, ".sorted.bam") + ".csorted";
+		exec(samtools + " sort " + referenceBAM + " " + sortedReferenceBAM, function(error, stdout, stderr) {
+			if (error) { return callback(error); }
+
+			sortedReferenceBAM += ".bam";
+			console.log("Finished classic sorting of reference BAM to: " + sortedReferenceBAM + ".");
+
+			if (removeIntermediateFiles) {
+				console.log("Removing " + referenceBAM);
+				fs.unlinkSync(referenceBAM);
+			}
+
+			//Index the BAM file
+			console.log("Indexing " + sortedReferenceBAM + "...");
+			exec(samtools + " index " + sortedReferenceBAM, function(error, stdout, stderr) {
+				if (error) { return callback(error); }
+				console.log("Finished indexing " + sortedReferenceBAM + ".");
+				referenceBAMFinished = sortedReferenceBAM;
+				if (modifiedBAMFinished !== null) {
+					initiateVariantCalling([modifiedBAMFinished, referenceBAMFinished], function(error, message) {
+						if (error) { return callback(error); }
+						callback(null, message);
+					});
+				}
+			});
+		});
+
 		//Convert BAM to SAM
 		console.log("Convert merged BAM file to SAM...");
 		var samFile = path.dirname(mergedFile) + "/" + path.basename(mergedFile, ".bam") + ".sam";
 		exec(samtools + " view -h -o " + samFile + " " + mergedFile, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
 			console.log("Finished converting to: " + samFile);
+
+			if (removeIntermediateFiles) {
+				console.log("Removing " + mergedFile);
+				fs.unlinkSync(mergedFile);
+			}
 			
 			//Keep best match
 			console.log("Keeping best match in SAM file...");
@@ -280,6 +377,11 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
 			exec(node + " utils/KeepBestMatch.js " + samFile + " > " + cleanedSAM, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished cleaning SAM file: " + cleanedSAM);
+
+				if (removeIntermediateFiles) {
+					console.log("Removing " + samFile);
+					fs.unlinkSync(samFile);
+				}
 				
 				//Convert to BAM
 				console.log("Converting " + cleanedSAM + " to BAM...");
@@ -288,29 +390,146 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
 					if (error) { return callback(error); }
 					console.log("Finished conversion to: " + cleanedBAM);
 
+					if (removeIntermediateFiles) {
+						console.log("Removing " + cleanedSAM);
+						fs.unlinkSync(cleanedSAM);
+					}
+
 					//Sort again, this time according to position
-					console.log("Sorting finished BAM according to position...")
+					console.log("Sorting finished BAM according to position...");
 					var sortedCleanedBAM = path.dirname(cleanedBAM) + "/" + path.basename(cleanedBAM, ".bam") + ".sorted";
 					exec(samtools + " sort " + cleanedBAM + " " + sortedCleanedBAM, function(error, stdout, stderr) {
 						if (error) { return callback(error); }
 						sortedCleanedBAM += ".bam";
 						console.log("Finished sorting to: " + sortedCleanedBAM);
+
+						if (removeIntermediateFiles) {
+							console.log("Removing " + cleanedBAM);
+							fs.unlinkSync(cleanedBAM);
+						}
 					
 						//Index the BAM file
 						console.log("Indexing " + sortedCleanedBAM + "...");
 						exec(samtools + " index " + sortedCleanedBAM, function(error, stdout, stderr) {
 							if (error) { return callback(error); }
 							console.log("Finished indexing of " + sortedCleanedBAM);
-							callback(null, sortedCleanedBAM);
-							
+
+							modifiedBAMFinished = sortedCleanedBAM;
+							if (referenceBAMFinished !== null) {
+								initiateVariantCalling([modifiedBAMFinished, referenceBAMFinished], function(error, message) {
+									if (error) { return callback(error); }
+									callback(null, message);
+								});
+							}
 						});
 					});
-				
 				});
 			});
 		});
 	});
 }
+
+function initiateVariantCalling(bamFiles) {
+
+	var callback = arguments[arguments.length - 1];
+	if (typeof(callback) !== 'function') callback = function(){};
+
+	console.log("Starting variant and indel calling...");
+	var count = 0;
+	for (var i=0; i < bamFiles.length; i++) {
+		count++;
+		performVariantCalling(bamFiles[i], function(error, message) {
+			if (error) { return callback(error); }
+			count--;
+			if (count === 0) {
+				console.log("Finished variant and indel calling.");
+				callback(null, "OK");
+			}
+		});
+	}
+}
+
+/*
+java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
+java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
+//samtools calmd -Abr FOO.sorted.bam human_18.fasta > FOO.baq.bam
+samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
+java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelGenotyperV2 -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -O /output/FOO_indel.txt --verbose -o /output/FOO_indel_statistics.txt
+java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
+*/
+
+function performVariantCalling(bamFile) {
+
+	var callback = arguments[arguments.length - 1];
+	if (typeof(callback) !== 'function') callback = function(){};
+
+	console.log("Begin variant calling on " + bamFile + "...");
+
+	console.log("Identify target regions for realignment...");
+//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
+	var intervalsDescriptor = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".intervals";
+	exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -I " + bamFile + " -o " + intervalsDescriptor, function(error, stdout, stderr) {
+		if (error) { return callback(error); }
+		console.log("Finished identifying target regions.");
+		
+		console.log("Realign BAM to get better Indel calling...");
+		//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
+		var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
+		exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM, function(error, stdout, stderr) {
+			if (error) { return callback(error); }
+			console.log("Finished realigning for indels.");
+
+			if (removeIntermediateFiles) {
+				console.log("Removing " + intervalsDescriptor);
+				fs.unlinkSync(intervalsDescriptor);
+			}
+			
+			console.log("Calculate BAQ...");
+			//	samtools calmd -ru FOO.sorted.bam human_18.fasta > FOO.baq.bam
+			//	or with gatk?
+			var baqBAM = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".bam") + ".baq.bam";
+			exec(samtools + " calmd -br " + realignedBAM + " " + referenceGenome + " > " + baqBAM, function(error, stdout, stderr) {
+				if (error) { return callback(error); }
+				console.log("Finished calculating BAQ to : " + baqBAM + ".");
+
+				if (removeIntermediateFiles) {
+					console.log("Removing " + realignedBAM);
+					fs.unlinkSync(realignedBAM);
+				}
+				
+				console.log("Reindex the realigned BAM...");
+				//	samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
+				exec(samtools + " index " + baqBAM, function(error, stdout, stderr) {
+					if (error) { return callback(error); }
+					console.log("Finished reindexing the realigned BAM.");
+					
+					console.log("Call Indels...");
+					//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelGenotyperV2 -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -O /output/FOO_indel.txt --verbose -o /output/FOO_indel_statistics.txt
+//					java -jar GenomeAnalysisTK.jar –R ref.fasta -T UnifiedGenotyper –L mytargets.list –I myreads.bam –o mycalls.vcf -B:dbsnp,VCF dbsnp.vcf -glm DINDEL
+//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
+					var indels = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indels.vcf";
+//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
+					exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + baqBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, function(error, stdout, stderr) {
+						if (error) { return callback(error); }
+						console.log("Finished calling indels.");
+						
+						console.log("Call SNPs...");
+						//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
+						var SNP = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_snps.vcf";
+						exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNP + " -nt" + cores, function(error, stdout, stderr) {
+							if (error) { return callback(error); }
+							console.log("Finished calling SNPs.");
+							console.log("Finished variant calling on " + bamFile);
+							
+							callback(null, "OK");
+						});						
+					});
+				});
+			});
+		});
+	});
+}
+
 
 function combineGenes(createdFiles, changeSet) {
 
@@ -321,7 +540,7 @@ function combineGenes(createdFiles, changeSet) {
 
 	path.exists(path.dirname(outputFileName), function(exists) {
 		if (!exists) {
-			fs.mkdirSync(path.dirname(outputFileName), 0700);
+			fs.mkdirSync(path.dirname(outputFileName), 700);
 		}
 
 		var child = exec("cat " + createdFiles.join(" ") + " > " + outputFileName, function (error, stdout, stderr) {
@@ -330,11 +549,7 @@ function combineGenes(createdFiles, changeSet) {
 			console.log("Combined files to " + outputFileName + ".");
 			callback(null, outputFileName);
 		});
-
 	});
-
-
-	
 }
 
 
@@ -358,15 +573,14 @@ function modifyGenes(genes, changeSet) {
 			count++;
 			if (count === genes.length) {
 				//Done
-				console.log("Done with gene modification.")
+				console.log("Done with gene modification.");
 				callback(null, createdFiles);
 			}
 		});
 	}
-
 }
 
 
 function trim(string) {
-    return string.replace(/^\s*|\s*$/, '')
+    return string.replace(/^\s*|\s*$/, '');
 }
