@@ -24,10 +24,10 @@ exports.FileLineReader = function(filename, bufferSize) {
     // fills buffer with next 8192 or less bytes  
     var fillBuffer = function(position) {  
   
-        var res = fs.readSync(fd, bufferSize, position, "ascii");  
+        var res = fs.readSync(fd, bufferSize, position, "utf8");  
   
         buffer += res[0];  
-        if (res[1] == 0) {  
+        if (res[1] === 0) {  
             return -1;  
         }  
         return position + res[1];  
