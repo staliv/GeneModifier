@@ -19,7 +19,7 @@ var Worker = require("../node_modules/worker").Worker;
 //Accepts a .sam file processed from a modified genome and outputs a file with modified coordinates
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 22, process.argv[1].length) == "/RewriteSAMParallel.js") {
 	if (process.argv.length <= 2) {
-		sys.puts("Accepts a *.sam file processed from a modified genome and outputs a file with correct coordinates coordinates.\nExample usage: 'node RewriteSAM.js samFilePath'");
+		sys.puts("Accepts a *.sam file processed from a modified genome and outputs a file with correct(ish) coordinates.\nExample usage: 'node RewriteSAMParallel.js samFilePath'");
 	}
 	else {
 		rewriteSAM(process.argv[process.argv.length - 1], function(error, message) {
@@ -123,7 +123,7 @@ function rewriteSAM(samFilePath) {
 //				}
 
 				var pilex = new Pile();
-                var linesPerParser = 10000;
+                var linesPerParser = 20000;
                 var lines = [];
                 var splitLine = null;
 
