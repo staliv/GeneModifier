@@ -17,7 +17,7 @@ var Worker = require("../node_modules/worker").Worker;
 //log4js.configure("../logs/config.json");
 
 //Accepts a .sam file processed from a modified genome and outputs a file with modified coordinates
-if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 14, process.argv[1].length) == "/RewriteSAM.js") {
+if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 22, process.argv[1].length) == "/RewriteSAMParallel.js") {
 	if (process.argv.length <= 2) {
 		sys.puts("Accepts a *.sam file processed from a modified genome and outputs a file with correct coordinates coordinates.\nExample usage: 'node RewriteSAM.js samFilePath'");
 	}
@@ -36,7 +36,7 @@ var Pile = function() {
    this.pile = [];
    this.concurrency = 0;
    this.done = null;
-   this.max_concurrency = 10;
+   this.max_concurrency = 5;
 };
 
 var allLines = [];
@@ -123,7 +123,7 @@ function rewriteSAM(samFilePath) {
 //				}
 
 				var pilex = new Pile();
-                var linesPerParser = 20000;
+                var linesPerParser = 10000;
                 var lines = [];
                 var splitLine = null;
 
@@ -171,7 +171,7 @@ function rewriteSAM(samFilePath) {
 					});
 				}
 //				var beginTime = new Date().getTime();
-				var threads = require("os").cpus().length * 2;
+				var threads = require("os").cpus().length;
 //				pilex.run(function() {console.log("Completed in " + (new Date().getTime() - beginTime) / 1000 + " seconds with " + threads + " threads.")}, threads);
 				pilex.run(function() {}, threads);
 				
