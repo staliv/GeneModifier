@@ -428,18 +428,16 @@ function initiateVariantCalling(bamFiles) {
 	if (typeof(callback) !== 'function') callback = function(){};
 
 	console.log("Starting variant and indel calling...");
-	var count = 0;
-	for (var i=0; i < bamFiles.length; i++) {
-		count++;
-		performVariantCalling(bamFiles[i], function(error, message) {
+	
+	performVariantCalling(bamFiles[0], function(error, message) {
+		if (error) { return callback(error); }
+
+		performVariantCalling(bamFiles[1], function(error, message) {
 			if (error) { return callback(error); }
-			count--;
-			if (count === 0) {
-				console.log("Finished variant and indel calling.");
-				callback(null, "OK");
-			}
+			console.log("Finished variant and indel calling.");
+			callback(null, "OK");
 		});
-	}
+	});
 }
 
 /*
