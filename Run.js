@@ -133,15 +133,59 @@ function run(genes, changeSet) {
 							}
 
 							rewrittenSAMPath = rewrittenSAM;
-							if (referenceSAMPath !== null) {
-								continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
-									if (error) { return callback(error); }
-									callback(message);
-								});
-							} else {
-								console.log("Waiting for reference genome to be ready...");
-							}
-							
+
+								//Index reference genome with bwa
+							//	console.log("Begin indexing of reference genome " + referenceGenome + "...")
+								//TODO: maybe not?
+							//	exec(bwa + " index -a bwtsw " + referenceGenome, function (error, stdout, stderr) {
+							//		if (error) { return callback(error); }
+							//		console.log("Finished indexing reference genome.");
+
+									var saiFile = resultsDir + path.basename(changeSet, ".cs") + "/" + "reference.sai";
+
+									path.exists(path.dirname(saiFile), function(exists) {
+										if (!exists) {
+											fs.mkdirSync(path.dirname(saiFile), 0700);
+										}
+
+										console.log("Aligning reference genome with " + fastq + "...");
+										//Align
+										exec(bwa + " aln -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
+											if (error) { return callback(error); }
+											console.log("Finished alignment against reference genome.");
+
+											console.log("Creating SAM for reference genome...");
+											var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
+											exec(bwa + " samse " + referenceGenome + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
+												if (error) { return callback(error); }
+												console.log("Finished creating SAM file for reference genome: " + samFile);
+
+												if (removeIntermediateFiles) {
+													console.log("Removing " + saiFile);
+													fs.unlinkSync(saiFile);
+												}
+
+												//Add score to reference alignment
+												console.log("Adding score to reference SAM...");
+												var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
+												exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, function (error, stdout, stderr) {
+													referenceSAMPath = scoredSAM;
+													console.log("Finished scoring: " + scoredSAM);
+
+													if (removeIntermediateFiles) {
+														console.log("Removing " + samFile);
+														fs.unlinkSync(samFile);
+													}
+
+													continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
+														if (error) { return callback(error); }
+														callback(null, message);
+													});
+												});
+											});
+										});
+									});		
+							//	});
 						});
 					});
 				});
@@ -149,62 +193,6 @@ function run(genes, changeSet) {
 		});
 	});
 
-	//Index reference genome with bwa
-//	console.log("Begin indexing of reference genome " + referenceGenome + "...")
-	//TODO: maybe not?
-//	exec(bwa + " index -a bwtsw " + referenceGenome, function (error, stdout, stderr) {
-//		if (error) { return callback(error); }
-//		console.log("Finished indexing reference genome.");
-		
-		var saiFile = resultsDir + path.basename(changeSet, ".cs") + "/" + "reference.sai";
-		
-		path.exists(path.dirname(saiFile), function(exists) {
-			if (!exists) {
-				fs.mkdirSync(path.dirname(saiFile), 0700);
-			}
-
-			console.log("Aligning reference genome with " + fastq + "...");
-			//Align
-			exec(bwa + " aln -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
-				if (error) { return callback(error); }
-				console.log("Finished alignment against reference genome.");
-	
-				console.log("Creating SAM for reference genome...");
-				var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
-				exec(bwa + " samse " + referenceGenome + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
-					if (error) { return callback(error); }
-					console.log("Finished creating SAM file for reference genome: " + samFile);
-
-					if (removeIntermediateFiles) {
-						console.log("Removing " + saiFile);
-						fs.unlinkSync(saiFile);
-					}
-
-					//Add score to reference alignment
-					console.log("Adding score to reference SAM...");
-					var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
-					exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, function (error, stdout, stderr) {
-						referenceSAMPath = scoredSAM;
-						console.log("Finished scoring: " + scoredSAM);
-
-						if (removeIntermediateFiles) {
-							console.log("Removing " + samFile);
-							fs.unlinkSync(samFile);
-						}
-						
-						if (rewrittenSAMPath !== null) {
-							continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
-								if (error) { return callback(error); }
-								callback(null, message);
-							});
-						}else {
-							console.log("Waiting for SAM to be rewritten...");
-						}
-					});
-				});
-			});
-		});		
-//	});
 }
 
 function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
