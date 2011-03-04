@@ -123,7 +123,7 @@ function run(genes, changeSet) {
 						//Rewrite SAM file
 						console.log("Rewriting modified SAM...");
 						rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
-						exec(node + " utils/RewriteSAM.js " + samFile + " > " + rewrittenSAM, function (error, stdout, stderr) {
+						exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, function (error, stdout, stderr) {
 							if (error) { return callback(error); }
 							console.log("Finished rewriting modified SAM to: " + rewrittenSAM + ".");
 
