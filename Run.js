@@ -221,8 +221,6 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 			if (removeIntermediateFiles) {
 				console.log("Removing " + headers);
 				fs.unlinkSync(headers);
-				console.log("Removing " + rewrittenSAMPath);
-				fs.unlinkSync(rewrittenSAMPath);
 			}
 	
 			console.log("Convert rewritten SAM to BAM...");
