@@ -122,7 +122,7 @@ function run(genes, changeSet) {
 						
 						//Rewrite SAM file
 						console.log("Rewriting modified SAM...");
-						rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
+						var rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
 						exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, function (error, stdout, stderr) {
 							if (error) { return callback(error); }
 							console.log("Finished rewriting modified SAM to: " + rewrittenSAM + ".");
@@ -215,21 +215,21 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 		exec("cat " + headers + " " + rewrittenSAMPath + " > " + withHeadersPath, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
 
+			rewrittenSAMPath = withHeadersPath;
+			console.log("Finished adding headers to  " + rewrittenSAMPath);
+
 			if (removeIntermediateFiles) {
 				console.log("Removing " + headers);
 				fs.unlinkSync(headers);
 				console.log("Removing " + rewrittenSAMPath);
 				fs.unlinkSync(rewrittenSAMPath);
 			}
-			
-			rewrittenSAMPath = withHeadersPath;
-			console.log("Finished adding headers to  " + rewrittenSAMPath + "...");
 	
 			console.log("Convert rewritten SAM to BAM...");
 			var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
 			exec(samtools + " view -S -b -h -o " + rewrittenBAM + " " + rewrittenSAMPath, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
-				console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM + ".");
+				console.log("Finished converting rewritten SAM to BAM: " + rewrittenBAM);
 
 				if (removeIntermediateFiles) {
 					console.log("Removing " + rewrittenSAMPath);
