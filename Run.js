@@ -477,7 +477,7 @@ function performVariantCalling(bamFile) {
 			//	samtools calmd -ru FOO.sorted.bam human_18.fasta > FOO.baq.bam
 			//	or with gatk?
 			var baqSAM = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".bam") + ".baq.sam";
-			exec(samtools + " calmd -r " + realignedBAM + " " + referenceGenome + " > " + baqBAM, function(error, stdout, stderr) {
+			exec(samtools + " calmd -r " + realignedBAM + " " + referenceGenome + " > " + baqSAM, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished calculating BAQ to : " + baqSAM + ".");
 
