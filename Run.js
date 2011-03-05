@@ -312,7 +312,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath) {
 	console.log("Merging BAM files...");
 	var mergedFile = path.dirname(referenceBAM) + "/" + path.basename(rewrittenBAM, ".sorted.bam") + "_" + path.basename(referenceBAM, ".sorted.bam") + ".bam";
 //	exec(samtools + " merge -rn -h " + referenceSAMPath + " " + mergedFile + " " + referenceBAM + " " + rewrittenBAM, function(error, stdout, stderr) {
-	exec(samtools + " merge -rn " + mergedFile + " " + referenceBAM + " " + rewrittenBAM, function(error, stdout, stderr) {
+	exec(samtools + " merge -n " + mergedFile + " " + referenceBAM + " " + rewrittenBAM, function(error, stdout, stderr) {
 		if (error) { return callback(error); }
 		console.log("Finished merging BAM files to: " + mergedFile);
 
