@@ -185,6 +185,7 @@ function parseLine(line, keys, next) {
 
 				
 				modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(oldCigar, oldMismatches));
+				modifiedLine.push("ZM:Z:" + key.changeset);
 
 				//Debug
 /*				if (cigar !== "75M") {
@@ -261,6 +262,7 @@ function parseLine(line, keys, next) {
 
 			//Output score to current line
 			modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(line[5], oldMismatches));
+			modifiedLine.push("ZM:Z:" + key.changeset);
 
 /*			if (XA) {
 				rewriteAltHits(XA, line[9], isReverseComplemented, function (error, altHits) {
