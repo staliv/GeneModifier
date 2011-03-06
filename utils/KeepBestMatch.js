@@ -39,7 +39,7 @@ function keepBestMatch(samFilePath) {
 			
 			while (true) {
 				line = lineReader.nextLine();
-				if (line.substr(0,3) === "@SQ") {
+				if (line.substr(0,3) === "@SQ" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD" || line.substr(0,3) === "@PG") {
 					sys.puts(line);
 				} else {
 					var readId = line.substr(0, line.indexOf("\t"));
