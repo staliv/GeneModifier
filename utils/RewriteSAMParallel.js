@@ -4,12 +4,6 @@ var fs = require("fs");
 var path = require("path");
 var sys = require("sys");
 var fileLineReader = require("./FileLineReader");
-var scoreCalculator = require("./CalculateAlignmentScore");
-var positionBackMapper = require("../PositionBackMapper");
-var exec = require("child_process").exec;
-var settings = require("../settings").settings;
-
-var exonerate = settings.exonerate;
 
 var Worker = require("../node_modules/worker").Worker;
 
@@ -32,16 +26,16 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 2
 	}
 }
 
+var allLines = [];
+var lineCounter = 0;
+var keys = {};
+
 var Pile = function() {
    this.pile = [];
    this.concurrency = 0;
    this.done = null;
    this.max_concurrency = 5;
 };
-
-var allLines = [];
-var lineCounter = 0;
-var keys = {};
 
 Pile.prototype = {
 	add: function(callback) {
@@ -166,6 +160,7 @@ function rewriteSAM(samFilePath) {
 						lineParser.addListener("message", function (msg) {
 							sys.puts(msg.out.join("\n"));
 							lineParser.terminate();
+							lineParser.kill();
 							next();
 						});
 					});
