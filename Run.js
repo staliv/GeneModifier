@@ -48,7 +48,7 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7
 			var startTime = new Date().getTime();
 			run(genes, changeset, function(error, message) {
 				if (error) {
-					sys.puts(error.message);
+					console.dir(error);
 					return;
 				}
 				var endTime = new Date().getTime();
