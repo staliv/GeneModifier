@@ -168,7 +168,7 @@ function run(genes, changeSet) {
 												//Add score to reference alignment
 												console.log("Adding score to reference SAM...");
 												var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
-												exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
+												exec(node + " utils/AddScoreToSAMParallel.js " + samFile + " > " + scoredSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
 													referenceSAMPath = scoredSAM;
 													console.log("Finished scoring: " + scoredSAM);
 
