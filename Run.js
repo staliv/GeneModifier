@@ -496,6 +496,7 @@ function performVariantCalling(bamFile) {
 	exec(samtools + " calmd -br " + bamFile + " " + referenceGenome + " > " + baqBAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 		if (error) { return callback(error); }
 		console.log("Finished calculating BAQ to: " + baqBAM + ".");
+//		console.log(stderr);
 
 		console.log("Index the BAM containing baq...");
 		//	samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
@@ -506,14 +507,14 @@ function performVariantCalling(bamFile) {
 			console.log("Identify target regions for realignment...");
 		//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
 			var intervalsDescriptor = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".intervals";
-			exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+			exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -L \"chr17:38449838-38531026;chr13:31787617-31871809\" -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished identifying target regions.");
 		
 				console.log("Realign BAM to get better Indel calling...");
 				//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
 				var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
-				exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+				exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -L \"chr17:38449838-38531026;chr13:31787617-31871809\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished realigning for indels.");
 
@@ -548,14 +549,14 @@ function performVariantCalling(bamFile) {
 			//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
 								var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
 			//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-								exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+								exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -L \"chr17:38449838-38531026;chr13:31787617-31871809\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 									if (error) { return callback(error); }
 									console.log("Finished calling indels.");
 						
 									console.log("Call SNPs...");
 									//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
 									var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
-									exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -L \"chr17:38449838-38531026;chr13:31787617-31871809\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling SNPs.");
 										console.log("Finished variant calling on " + bamFile);
