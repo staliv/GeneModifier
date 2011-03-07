@@ -123,7 +123,7 @@ function run(genes, changeSet) {
 						//Rewrite SAM file
 						console.log("Rewriting modified SAM...");
 						var rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
-						exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, function (error, stdout, stderr) {
+						exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
 							if (error) { return callback(error); }
 							console.log("Finished rewriting modified SAM to: " + rewrittenSAM + ".");
 
@@ -168,7 +168,7 @@ function run(genes, changeSet) {
 												//Add score to reference alignment
 												console.log("Adding score to reference SAM...");
 												var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
-												exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, function (error, stdout, stderr) {
+												exec(node + " utils/AddScoreToSAM.js " + samFile + " > " + scoredSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
 													referenceSAMPath = scoredSAM;
 													console.log("Finished scoring: " + scoredSAM);
 
@@ -399,7 +399,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 				//Keep best match
 				console.log("Keeping best match in SAM file...");
 				var cleanedSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".cleaned.sam";
-				exec(node + " utils/KeepBestMatch.js " + samFile + " > " + cleanedSAM, function(error, stdout, stderr) {
+				exec(node + " utils/KeepBestMatch.js " + samFile + " > " + cleanedSAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished cleaning SAM file: " + cleanedSAM);
 
@@ -506,14 +506,14 @@ function performVariantCalling(bamFile) {
 			console.log("Identify target regions for realignment...");
 		//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
 			var intervalsDescriptor = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".intervals";
-			exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -I " + bamFile + " -o " + intervalsDescriptor, function(error, stdout, stderr) {
+			exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished identifying target regions.");
 		
 				console.log("Realign BAM to get better Indel calling...");
 				//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
 				var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
-				exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM, function(error, stdout, stderr) {
+				exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished realigning for indels.");
 
@@ -548,14 +548,14 @@ function performVariantCalling(bamFile) {
 			//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
 								var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
 			//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-								exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, function(error, stdout, stderr) {
+								exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 									if (error) { return callback(error); }
 									console.log("Finished calling indels.");
 						
 									console.log("Call SNPs...");
 									//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
 									var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
-									exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -nt " + cores, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -R " + referenceGenome + " -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling SNPs.");
 										console.log("Finished variant calling on " + bamFile);
