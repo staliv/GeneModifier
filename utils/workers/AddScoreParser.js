@@ -18,7 +18,7 @@ worker.onmessage = function (msg) {
 			if (modifiedLine !== "") {
 				newLines.push(modifiedLine);
 			}
-			--count;
+			count--;
 			if (count === 0) {
 				worker.postMessage({
 					out: newLines
