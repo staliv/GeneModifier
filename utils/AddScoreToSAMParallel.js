@@ -5,7 +5,7 @@ var path = require("path");
 var sys = require("sys");
 var scoreCalculator = require("./CalculateAlignmentScore");
 var fileLineReader = require("./FileLineReader");
-var cores = require("os").cpus().length * 2;
+var cores = require("os").cpus().length;
 var Worker = require("../node_modules/worker").Worker;
 var exec = require("child_process").exec;
 
@@ -64,8 +64,8 @@ var allLines = [];
 var lineCounter = 0;
 var nrOfLines = null;
 var lineReader = null;
-var linesPerParser = 10000;
-var linesPerIteration = linesPerParser * cores * 4;
+var linesPerParser = 20000;
+var linesPerIteration = linesPerParser * cores * 2;
 var totalCounter = 0;
 var iterationStartTime = null;
 function commenceIteration(iteration, next) {
@@ -85,6 +85,8 @@ function commenceIteration(iteration, next) {
 	var lines = [];
 	var linesToIterate = linesPerIteration;
 	var line = null;
+	allLines = [];
+	lineCounter = 0;
 	
 	if (nrOfLines < (linesPerIteration * (iteration))) {
 		linesToIterate = nrOfLines - (linesPerIteration * iteration);
@@ -113,20 +115,19 @@ function commenceIteration(iteration, next) {
 				pilex.add(function createParser(next) {
 
 					var lineParser = new Worker("./utils/workers/AddScoreParser.js");
-
+					sys.error("\tSending\t" + allLines[lineCounter].length + " lines...");
 					lineParser.postMessage({"lines": allLines[lineCounter]});
 					lineCounter++;
 					lineParser.addListener("message", function (msg) {
 						sys.puts(msg.out.join("\n"));
-//						sys.error("Received " + msg.out.length + " lines");
+						sys.error("\tReceived\t" + msg.out.length + " lines");
 						lineParser.terminate();
-//						lineParser.kill();
+						lineParser.kill();
 						next();
 					});
 				});
 
-//				sys.error(pilex.pile.length);
-//				sys.error(allLines[allLines.length - 1].length);
+				sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
 
 				lines = [];
 			}
@@ -140,26 +141,26 @@ function commenceIteration(iteration, next) {
 
 			var lineParser = new Worker("./utils/workers/AddScoreParser.js");
 
+			sys.error("\tSending\t" + allLines[lineCounter].length + " lines...");
 			lineParser.postMessage({"lines": allLines[lineCounter]});
 			lineCounter++;
 
 			lineParser.addListener("message", function (msg) {
 				sys.puts(msg.out.join("\n"));
-//				sys.error("Received " + msg.out.length + " lines");
+				sys.error("\tReceived\t" + msg.out.length + " lines");
 				lineParser.terminate();
-//				lineParser.kill();
+				lineParser.kill();
 				next();
 			});
 		});
 
-//		sys.error(pilex.pile.length);
-//		sys.error(allLines[allLines.length - 1].length);
+		sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
 
 		lines = [];
 	}
 
 	pilex.run(function() {
-		sys.error("Iteration " + (iteration) + " is completed.");
+		sys.error("Iteration " + (iteration) + " is complete.");
 		if (((iteration) * linesPerIteration) < nrOfLines) {
 			commenceIteration(iteration + 1);
 		} else {
