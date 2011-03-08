@@ -95,11 +95,9 @@ function commenceIteration(iteration, next) {
 		}
 	}
 
-//	sys.error("Lines = " + linesToIterate);
 
 	for (var i = linesToIterate - 1; i >= 0; i--){
 
-//	for (var i = 0; i < linesToIterate; i++) {
 		line = lineReader.nextLine();
 		lineReader.hasNextLine();
 
@@ -107,7 +105,6 @@ function commenceIteration(iteration, next) {
 			sys.puts(line);
 		} else {
 			totalCounter++;
-//			console.log(line);
 			lines.push(line);
 			if (lines.length === linesPerParser) {
 				allLines.push(lines);
@@ -177,54 +174,13 @@ function addScoreToSAM(samFilePath) {
 
 	path.exists(samFilePath, function(exists) {
 		if (exists) {
-//			console.log(samFilePath.replace(/ /g, "\\ "));
+
 			exec("wc -l " + samFilePath, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				nrOfLines = parseFloat(trim(stdout).split(" ")[0]);
 				lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 
 				commenceIteration(1);
-/*				
-				pilex.add(function createParser(next) {
-
-					var lineParser = new Worker("./utils/workers/AddScoreParser.js");
-
-					lineParser.postMessage({"lines": allLines[lineCounter]});
-					lineCounter++;
-
-					lineParser.addListener("message", function (msg) {
-						sys.puts(msg.out.join("\n"));
-						lineParser.terminate();
-						lineParser.kill();
-						next();
-					});
-				});
-*/
-
-/*
-				for (var i=0; i < allLines.length; i++) {
-					pilex.add(function createParser(next) {
-
-	//					console.log("Entered pile");
-
-						var lineParser = new Worker("./utils/workers/AddScoreParser.js");
-
-						lineParser.postMessage({"lines": allLines[lineCounter]});
-						lineCounter++;
-
-						lineParser.addListener("message", function (msg) {
-							sys.puts(msg.out.join("\n"));
-	//						sys.puts(msg.out.length);
-							lineParser.terminate();
-							lineParser.kill();
-							next();
-						});
-					});
-				}
-*/			
-	//			var beginTime = new Date().getTime();
-	//			pilex.run(function() { console.log("Completed in " + (new Date().getTime() - beginTime) / 1000 + " seconds with " + cores + " threads."); }, cores);
-//				pilex.run(function() {allLines = []; callback(null, ""); }, cores);
 			});
 			
 		} else {
