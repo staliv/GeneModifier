@@ -399,7 +399,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 				//Keep best match
 				console.log("Keeping best match in SAM file...");
 				var cleanedSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".cleaned.sam";
-				exec(node + " utils/KeepBestMatch.js " + samFile + " > " + cleanedSAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+				exec(node + " utils/KeepBestMatchParallel.js " + samFile + " > " + cleanedSAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished cleaning SAM file: " + cleanedSAM);
 
