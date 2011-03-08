@@ -4,6 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var sys = require("sys");
 var fileLineReader = require("./FileLineReader");
+var exec = require("child_process").exec;
 
 //Accepts a merged .sam file sorted on the read ID and keeps only the best match based on YM:i
 if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 17, process.argv[1].length) == "/KeepBestMatch.js") {
@@ -36,36 +37,48 @@ function keepBestMatch(samFilePath) {
 			var lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 			var line = null;
 			var previousLines = [];
-			
-			while (true) {
-				line = lineReader.nextLine();
-				if (line.substr(0,3) === "@SQ" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD" || line.substr(0,3) === "@PG") {
-					sys.puts(line);
-				} else {
-					var readId = line.substr(0, line.indexOf("\t"));
-					var score = parseFloat(line.substr(line.indexOf("YM:i:") + 5, 2));
-					if (previousLines.length === 0) {
-						//Push a new compare object
-						previousLines.push({"id": readId, "score": score, "line": line});
-					} else if (previousLines[0].id === readId) {
-						//Add one more compare object
-						previousLines.push({"id": readId, "score": score, "line": line});
-					} else if (previousLines[0].id !== readId) {
-						//Compare previous objects
-						compareAndOutput(previousLines);
-						//Empty the array
-						previousLines = [];
-						//Push current line as new compare object
-	                    previousLines.push({"id": readId, "score": score, "line": line});
+			exec("wc -l " + samFilePath, function(error, stdout, stderr) {
+				if (error) {return callback(error); }
+				
+				var nrOfLines = parseFloat(trim(stdout).split(" ")[0]);
+
+				for (var i = nrOfLines - 1; i >= 0; i--) {
+
+					if ((i % 40000) === 0) {
+						sys.error(i + " left");
+					}
+
+					line = lineReader.nextLine();
+					lineReader.hasNextLine();
+
+					if (line.substr(0,3) === "@SQ" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD" || line.substr(0,3) === "@PG") {
+						sys.puts(line);
+					} else {
+						var readId = line.substr(0, line.indexOf("\t"));
+						var score = parseFloat(line.substr(line.indexOf("YM:i:") + 5, 2));
+						if (previousLines.length === 0) {
+							//Push a new compare object
+							previousLines.push({"id": readId, "score": score, "line": line});
+						} else if (previousLines[0].id === readId) {
+							//Add one more compare object
+							previousLines.push({"id": readId, "score": score, "line": line});
+						} else if (previousLines[0].id !== readId) {
+							//Compare previous objects
+							compareAndOutput(previousLines);
+							//Empty the array
+							previousLines = [];
+							//Push current line as new compare object
+		                    previousLines.push({"id": readId, "score": score, "line": line});
+						}
 					}
 				}
-				if (!lineReader.hasNextLine()) {
+				if (previousLines.length > 0) {
 					//Last line should be compared
 					compareAndOutput(previousLines);
-					break;
 				}
-			}
-			callback(null, "Done");
+				callback(null, "Done");
+				
+			});
 		}
 	});
 }
@@ -85,10 +98,13 @@ function compareAndOutput(previousLines) {
 		}
 		//Output best match
 		sys.puts(keep.line);
+		keep = null;
 	} else {
 		//Only one match
 		sys.puts(previousLines[0].line);
 	}
+	previousLines = null;
+	return;
 }
 
 function addAltHits(keep, other) {
@@ -110,6 +126,9 @@ function addAltHits(keep, other) {
 		keepLine.push("XA:Z:" + altHits);
 	}
 	keep.line = keepLine.join("\t");
+	altHits = null;
+	altPosition = null;
+	keepLine = null;
 	return keep;
 }
 
@@ -124,3 +143,7 @@ var sortLines = function(a, b) {
 	}
 	return 0;
 };
+
+function trim(string) {
+    return string.replace(/^\s*|\s*$/, '');
+}
