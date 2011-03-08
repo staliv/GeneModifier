@@ -30,7 +30,9 @@ exports.FileLineReader = function(filename, bufferSize) {
         if (res[1] === 0) {  
             return -1;  
         }  
-        return position + res[1];  
+		var newPosition = position + res[1];
+		res = null;
+        return newPosition;
   
     };  
   
@@ -48,7 +50,7 @@ exports.FileLineReader = function(filename, bufferSize) {
         if (buffer.indexOf("\n") > -1) {  
   
             return true;  
-        }  
+        }
         return false;  
     };  
   

@@ -30,7 +30,6 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 2
 
 exports.addScoreToSAM = addScoreToSAM;
 
-
 var Pile = function() {
    this.pile = [];
    this.concurrency = 0;
@@ -52,7 +51,6 @@ Pile.prototype = {
 			(--target === 0) ? self.done() : self.run();
 		};
 		while(this.concurrency < this.max_concurrency && this.pile.length > 0) {
-//			console.log("conc = " + this.concurrency + " < max = " + this.max_concurrency);
 			this.concurrency++;
 			var callback = this.pile.shift();
 			callback(next);
