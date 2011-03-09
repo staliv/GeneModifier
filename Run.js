@@ -105,7 +105,7 @@ function run(genes, changeSet) {
 					var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
 					exec(bwa + " samse " + fileName + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
 						if (error) { return callback(error); }
-						console.log("Finished creating modified SAM with path: " + samFile + ".");
+						console.log("Finished creating modified SAM with path: " + samFile);
 						
 						if (removeIntermediateFiles) {
 							fs.unlinkSync(saiFile);
@@ -119,73 +119,106 @@ function run(genes, changeSet) {
 							fs.unlinkSync(fileName + ".rsa");
 							fs.unlinkSync(fileName + ".sa");
 						}
-						
-						//Rewrite SAM file
-						console.log("Rewriting modified SAM...");
-						var rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
-						exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
-							if (error) { return callback(error); }
-							console.log("Finished rewriting modified SAM to: " + rewrittenSAM + ".");
 
-							if (removeIntermediateFiles){
+						//Add score to modified SAM
+						//Add score to reference alignment
+						console.log("Adding score to modified SAM...");
+						var scoredModSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
+						exec(node + " utils/AddScoreToSAMParallel.js " + samFile + " > " + scoredModSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
+
+							console.log("Finished scoring: " + scoredModSAM);
+
+							if (removeIntermediateFiles) {
 								console.log("Removing " + samFile);
 								fs.unlinkSync(samFile);
 							}
 
-							rewrittenSAMPath = rewrittenSAM;
+							samFile = scoredModSAM;
+							
+							//Rewrite SAM file
+							console.log("Rewriting modified SAM...");
+							var rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
+							exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
+								if (error) { return callback(error); }
+								console.log("Finished rewriting modified SAM to: " + rewrittenSAM);
 
-								//Index reference genome with bwa
-							//	console.log("Begin indexing of reference genome " + referenceGenome + "...")
-								//TODO: maybe not?
-							//	exec(bwa + " index -a bwtsw " + referenceGenome, function (error, stdout, stderr) {
-							//		if (error) { return callback(error); }
-							//		console.log("Finished indexing reference genome.");
+								if (removeIntermediateFiles){
+									console.log("Removing " + samFile);
+									fs.unlinkSync(samFile);
+								}
 
-									var saiFile = resultsDir + path.basename(changeSet, ".cs") + "/" + "reference.sai";
+								samFile = rewrittenSAM;
+/*
+								//Calculate MD for modified SAM
+								console.log("Calculate MD for modified SAM...");
+								//	samtools calmd -ru FOO.sorted.bam human_18.fasta > FOO.baq.bam
+								//	or with gatk?
+								var mdSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".md.sam";
+								exec(samtools + " calmd -S " + samFile + " " + referenceGenome + " > " + mdSAM, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									if (error) { return callback(error); }
+									console.log("Finished calculating MD to: " + mdSAM);
+							//		console.log(stderr);
+									if (removeIntermediateFiles) {
+										console.log("Removing " + samFile);
+										fs.unlinkSync(samFile);
+									}
+									samFile = mdSAM;
+*/
+									rewrittenSAMPath = samFile;
+								
+									//Index reference genome with bwa
+								//	console.log("Begin indexing of reference genome " + referenceGenome + "...")
+									//TODO: maybe not?
+								//	exec(bwa + " index -a bwtsw " + referenceGenome, function (error, stdout, stderr) {
+								//		if (error) { return callback(error); }
+								//		console.log("Finished indexing reference genome.");
 
-									path.exists(path.dirname(saiFile), function(exists) {
-										if (!exists) {
-											fs.mkdirSync(path.dirname(saiFile), 0700);
-										}
+										var saiFile = resultsDir + path.basename(changeSet, ".cs") + "/" + "reference.sai";
 
-										console.log("Aligning reference genome with " + fastq + "...");
-										//Align
-										exec(bwa + " aln -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
-											if (error) { return callback(error); }
-											console.log("Finished alignment against reference genome.");
+										path.exists(path.dirname(saiFile), function(exists) {
+											if (!exists) {
+												fs.mkdirSync(path.dirname(saiFile), 0700);
+											}
 
-											console.log("Creating SAM for reference genome...");
-											var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
-											exec(bwa + " samse " + referenceGenome + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
+											console.log("Aligning reference genome with " + fastq + "...");
+											//Align
+											exec(bwa + " aln -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
 												if (error) { return callback(error); }
-												console.log("Finished creating SAM file for reference genome: " + samFile);
+												console.log("Finished alignment against reference genome.");
 
-												if (removeIntermediateFiles) {
-													console.log("Removing " + saiFile);
-													fs.unlinkSync(saiFile);
-												}
-
-												//Add score to reference alignment
-												console.log("Adding score to reference SAM...");
-												var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
-												exec(node + " utils/AddScoreToSAMParallel.js " + samFile + " > " + scoredSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
-													referenceSAMPath = scoredSAM;
-													console.log("Finished scoring: " + scoredSAM);
+												console.log("Creating SAM for reference genome...");
+												var samFile = path.dirname(saiFile) + "/" + path.basename(saiFile, ".sai") + ".sam";
+												exec(bwa + " samse " + referenceGenome + " " + saiFile + " " + fastq + " > " + samFile, function (error, stdout, stderr) {
+													if (error) { return callback(error); }
+													console.log("Finished creating SAM file for reference genome: " + samFile);
 
 													if (removeIntermediateFiles) {
-														console.log("Removing " + samFile);
-														fs.unlinkSync(samFile);
+														console.log("Removing " + saiFile);
+														fs.unlinkSync(saiFile);
 													}
 
-													continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
-														if (error) { return callback(error); }
-														callback(null, message);
+													//Add score to reference alignment
+													console.log("Adding score to reference SAM...");
+													var scoredSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".scored.sam";
+													exec(node + " utils/AddScoreToSAMParallel.js " + samFile + " > " + scoredSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
+														referenceSAMPath = scoredSAM;
+														console.log("Finished scoring: " + scoredSAM);
+
+														if (removeIntermediateFiles) {
+															console.log("Removing " + samFile);
+															fs.unlinkSync(samFile);
+														}
+
+														continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet, function(error, message) {
+															if (error) { return callback(error); }
+															callback(null, message);
+														});
 													});
 												});
 											});
-										});
-									});		
-							//	});
+										});		
+								//	});
+							});
 						});
 					});
 				});
@@ -380,7 +413,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 			//Add read groups to header
 			console.log("Adding read groups to header...");
 			var readGroupReference = "@RG	ID:reference.scored.sorted	SM:" + path.basename(changeSet, ".cs");
-			var readGroupModified = "@RG	ID:" + path.basename(changeSet, ".cs") + ".rewritten.headers.sorted	SM:" + path.basename(changeSet, ".cs");
+			var readGroupModified = "@RG	ID:" + path.basename(changeSet, ".cs") + ".scored.rewritten.headers.sorted	SM:" + path.basename(changeSet, ".cs");
 			var readGroupsFile = path.dirname(samFile) + "/readgroups.sam";
 			var newSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rg.sam";
 			exec('echo "' + readGroupReference + '" > ' + readGroupsFile + ' ; echo "' + readGroupModified + '" >> ' + readGroupsFile + ' ; cat ' + readGroupsFile + ' ' + samFile + ' > ' + newSAM, function(error, stdout, stderr) {
