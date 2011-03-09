@@ -162,6 +162,14 @@ function commenceIteration(iteration, nrOfLines, callback) {
 		}
 	}
 
+	if (remainingLines.length > 0) {
+		for (var i=0; i < remainingLines.length; i++) {
+			sys.error("Adding remaining line: " + remainingLines[i]);
+			lines.push(remainingLines[i]);
+		}
+		remainingLines = [];
+	}
+
 	for (var i = 0; i < linesToIterate; i++){
 
 		line = lineReader.nextLine();
@@ -173,11 +181,15 @@ function commenceIteration(iteration, nrOfLines, callback) {
 			sys.puts(line);
 		} else {
 
-			//Check last line has same id as previous line, if so then it is safe to add 
-			if (i % linesPerParser === linesPerParser - 1 && lines.length > 0) {
+			//Check if last line has same id as previous line, if so then it is safe to add 
+			if (i % linesPerParser === linesPerParser - 1 && lines.length > 0 || i % linesToIterate === linesToIterate - 1 && lines.length > 0) {
+				sys.error("Checking last line:");
+				sys.error(line.split("\t")[0]);
+				sys.error(lines[lines.length - 1].split("\t")[0]);
 				if (line.split("\t")[0] === lines[lines.length - 1].split("\t")[0]) {
 					lines.push(line);
 				} else {
+					sys.error("Added line to remaining lines.");
 					remainingLines.push(line);
 				}
 			}else {
@@ -210,6 +222,7 @@ function commenceIteration(iteration, nrOfLines, callback) {
 		}
 	}
 	if (lines.length > 1 || (lines.length > 0 && iteration === nrOfIterations)) {
+
 		allLines.push(lines);
 
 		pilex.add(function createParser(next) {
