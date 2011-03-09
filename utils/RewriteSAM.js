@@ -193,7 +193,6 @@ function parseLine(line, keys, next) {
 					error = error;
 				}
 
-//				sys.puts(stdout);
 				var alignment = stdout.split("\n");
 				var cigar = "", oldCigar = line[5];
 				var rawScore = "";
@@ -498,7 +497,7 @@ function calculateMismatches(mismatches, sequence, reference) {
 			var differentReferenceBase = reference.substr(i, 1);
 
 			if (differentSequenceBase !== "-" && differentReferenceBase !== "-") {
-				newMismatches.push(differentSequenceBase);
+				newMismatches.push(differentReferenceBase);
 			}
 			else if (differentSequenceBase === "-") {
 				//Check if preceding base was also a deletion
