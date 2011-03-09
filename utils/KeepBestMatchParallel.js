@@ -102,7 +102,7 @@ function splitToFiles(samFile, callback) {
 			splitCounter++;
 			splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
 			alreadySplitted += splits[i];
-			exec("head -n " + (alreadySplitted + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+			exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
 				if (error) {return callback(error); }
 				if (stderr) {sys.error(stderr); }
 				files[i] = [splitFiles[i], splits[i]];
