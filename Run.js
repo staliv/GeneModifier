@@ -385,7 +385,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 			var newSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rg.sam";
 			exec('echo "' + readGroupReference + '" > ' + readGroupsFile + ' ; echo "' + readGroupModified + '" >> ' + readGroupsFile + ' ; cat ' + readGroupsFile + ' ' + samFile + ' > ' + newSAM, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
-				console.log("Finished adding read groups.");
+				console.log("Finished adding read groups to: " + newSAM);
 
 				if (removeIntermediateFiles) {
 					console.log("Removing " + samFile);
