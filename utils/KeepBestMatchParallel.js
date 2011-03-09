@@ -95,11 +95,12 @@ function commenceIteration(iteration, next) {
 
 		line = lineReader.nextLine();
 		lineReader.hasNextLine();
+		totalCounter++;
 
 		if (line.substr(0, 3) === "@SQ" || line.substr(0,3) === "@PG" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD") {
+			sys.error("Found header on line: " + totalCounter + " :: " + line);
 			sys.puts(line);
 		} else {
-			totalCounter++;
 
 			//Check last line has same id as previous line, if so then it is safe to add 
 			if (i % linesPerParser === linesPerParser - 1 && lines.length > 0) {
