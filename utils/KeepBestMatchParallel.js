@@ -79,7 +79,7 @@ function keepBestMatch(samFilePath) {
 
 function splitToFiles(samFile, callback) {
 	
-	var maxNumberOfLines = Math.round((nrOfLines / 10));
+	var maxNumberOfLines = Math.round((nrOfLines / 4));
 	var files = [];
 	if (nrOfLines > maxNumberOfLines) {
 
@@ -129,12 +129,13 @@ var allLines = [];
 var lineCounter = 0;
 var nrOfLines = null;
 var lineReader = null;
-var linesPerParser = 20000;
+var linesPerParser = 40000;
 var linesPerIteration = linesPerParser * cores * 2;
 var totalCounter = 0;
 var iterationStartTime = null;
 var lines = [];
 var remainingLines = [];
+var checkedLastLine = false;
 
 function commenceIteration(iteration, nrOfLines, callback) {
 
@@ -147,7 +148,10 @@ function commenceIteration(iteration, nrOfLines, callback) {
 		iterationStartTime = new Date().getTime();
 	}
 
+	sys.error("");
 	sys.error("Iteration " + (iteration) + " of " + nrOfIterations);
+//	sys.error("Lines = " + lines);
+//	sys.error("Remaininglines = " + remainingLines);
 	
 	var pilex = new Pile();
 	var linesToIterate = linesPerIteration;
@@ -164,12 +168,12 @@ function commenceIteration(iteration, nrOfLines, callback) {
 
 	if (remainingLines.length > 0) {
 		for (var i=0; i < remainingLines.length; i++) {
-			sys.error("Adding remaining line: " + remainingLines[i]);
+//			sys.error("Adding remaining line: " + remainingLines[i]);
 			lines.push(remainingLines[i]);
 		}
 		remainingLines = [];
 	}
-
+	var headerCount = 0;
 	for (var i = 0; i < linesToIterate; i++){
 
 		line = lineReader.nextLine();
@@ -177,30 +181,52 @@ function commenceIteration(iteration, nrOfLines, callback) {
 		totalCounter++;
 
 		if (line.substr(0, 3) === "@SQ" || line.substr(0,3) === "@PG" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD") {
-			sys.error("Found header on line: " + totalCounter + " :: " + line);
+//			sys.error("Found header on line: " + totalCounter + " :: " + line);
 			sys.puts(line);
+			headerCount++;
 		} else {
 
+//			sys.error("\ti=" + i + " linesPerParser=" + linesPerParser + " linesToIterate=" + linesToIterate + " lines.length=" + lines.length);
 			//Check if last line has same id as previous line, if so then it is safe to add 
-			if (i % linesPerParser === linesPerParser - 1 && lines.length > 0 || i % linesToIterate === linesToIterate - 1 && lines.length > 0) {
-				sys.error("Checking last line:");
-				sys.error(line.split("\t")[0]);
-				sys.error(lines[lines.length - 1].split("\t")[0]);
+//			if ((i - headerCount - lines.length) % linesPerParser === linesPerParser - 1 && lines.length > 0 || (i - headerCount) % linesToIterate === linesToIterate - 1 && lines.length > 0) {
+			if ((lines.length === linesPerParser -1 && !checkedLastLine) || (i - headerCount) % linesToIterate === linesToIterate - 1 && lines.length > 0) {
+//				sys.error("Checking last line:");
+//				sys.error(lines[lines.length - 1].split("\t")[0]);
+//				sys.error(line.split("\t")[0]);
 				if (line.split("\t")[0] === lines[lines.length - 1].split("\t")[0]) {
 					lines.push(line);
 				} else {
-					sys.error("Added line to remaining lines.");
+					lines.push(null);
+					checkedLastLine = true;
+//					sys.error("Added " + line.split("\t")[0] + " to remaining lines.");
 					remainingLines.push(line);
 				}
 			}else {
+//				sys.error("Pushed " + line.split("\t")[0]);
 				lines.push(line);
 			}
+			
 			if (lines.length === linesPerParser) {
 				allLines.push(lines);
-
+				checkedLastLine = false;
 				pilex.add(function createParser(next) {
 
+/*
+					var out = [];
+					for (var i=0; i < allLines[lineCounter].length; i++) {
+						if (allLines[lineCounter][i] === null) {
+							out.push("null");
+						} else {
+							out.push(allLines[lineCounter][i].split("\t")[0]);
+						}
+					}
+					out.push(allLines[lineCounter][0].split("\t")[0]);
+					
+					sys.error("\tSending:\t" + out.join("\n\t\t\t") + "\n");
+*/
+
 					var lineParser = new Worker("./utils/workers/KeepBestMatchParser.js");
+
 					sys.error("\tSending\t" + allLines[lineCounter].length + " lines...");
 					lineParser.postMessage({"lines": allLines[lineCounter]});
 					lineCounter++;
@@ -213,20 +239,33 @@ function commenceIteration(iteration, nrOfLines, callback) {
 					});
 				});
 
-				sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
+//				sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
 
 				lines = remainingLines;
+/*				if (lines.length > 0) {
+					sys.error("\t\tKept line for next parser: " + lines[0].split("\t")[0]);
+				}
+*/
 				remainingLines = [];
 			}
 
 		}
 	}
-	if (lines.length > 1 || (lines.length > 0 && iteration === nrOfIterations)) {
+	if (lines.length > 1) {
 
 		allLines.push(lines);
 
 		pilex.add(function createParser(next) {
 
+/*			var out = [];
+//			for (var i=0; i < allLines[lineCounter].length; i++) {
+				out.push(allLines[lineCounter][0].split("\t")[0]);
+				if (allLines[lineCounter][allLines[lineCounter] - 1] === null) {
+					out.push("null");
+				} 
+//			}
+			sys.error("\tSending:\t" + out.join("\n\t\t\t") + "\n");
+*/
 			var lineParser = new Worker("./utils/workers/KeepBestMatchParser.js");
 
 			sys.error("\tSending\t" + allLines[lineCounter].length + " lines...");
@@ -242,7 +281,7 @@ function commenceIteration(iteration, nrOfLines, callback) {
 			});
 		});
 
-		sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
+//		sys.error("\tPile is of length: " + pilex.pile.length + "\tallLines.length = " + allLines.length + "\tallLines.last.length = " + allLines[allLines.length - 1].length);
 
 		lines = [];
 	}

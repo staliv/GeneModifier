@@ -11,23 +11,25 @@ worker.onmessage = function (msg) {
 	
 	for (var i = 0; i < count; i++) {
 
-		line = lines[i];
+		if (lines[i] !== null) {
+			line = lines[i];
 
-		var readId = line.substr(0, line.indexOf("\t"));
-		var score = parseFloat(line.substr(line.indexOf("YM:i:") + 5, 2));
-		if (previousLines.length === 0) {
-			//Push a new compare object
-			previousLines.push({"id": readId, "score": score, "line": line});
-		} else if (previousLines[0].id === readId) {
-			//Add one more compare object
-			previousLines.push({"id": readId, "score": score, "line": line});
-		} else if (previousLines[0].id !== readId) {
-			//Compare previous objects
-			newLines.push(getBestLine(previousLines));
-			//Empty the array
-			previousLines = [];
-			//Push current line as new compare object
-			previousLines.push({"id": readId, "score": score, "line": line});
+			var readId = line.substr(0, line.indexOf("\t"));
+			var score = parseFloat(line.substr(line.indexOf("YM:i:") + 5, 2));
+			if (previousLines.length === 0) {
+				//Push a new compare object
+				previousLines.push({"id": readId, "score": score, "line": line});
+			} else if (previousLines[0].id === readId) {
+				//Add one more compare object
+				previousLines.push({"id": readId, "score": score, "line": line});
+			} else if (previousLines[0].id !== readId) {
+				//Compare previous objects
+				newLines.push(getBestLine(previousLines));
+				//Empty the array
+				previousLines = [];
+				//Push current line as new compare object
+				previousLines.push({"id": readId, "score": score, "line": line});
+			}
 		}
 	}
 
