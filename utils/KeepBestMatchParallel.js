@@ -237,7 +237,7 @@ function commenceIteration(iteration, nrOfLines, callback) {
 	pilex.run(function() {
 		sys.error("Iteration " + (iteration) + " is complete.");
 		if (((iteration) * linesPerIteration) < nrOfLines) {
-			commenceIteration(iteration + 1, callback);
+			commenceIteration(iteration + 1, nrOfLines, callback);
 		} else {
 			sys.error("Parsed " + totalCounter + " lines.");
 			callback(null, "");
