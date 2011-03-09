@@ -68,7 +68,6 @@ function rewriteSAM(samFilePath) {
 		if (exists) {
 			var lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 			var keysArray = [];
-			var output = [];
 			var line = null;
 			while (lineReader.hasNextLine()) {
 				line = lineReader.nextLine();
@@ -85,7 +84,7 @@ function rewriteSAM(samFilePath) {
 					};
 					keysArray.push(key);
 				} else if (line.substr(0,3) === "@PG" || line.substr(0,3) === "@RG" || line.substr(0,3) === "@HD") {
-					//Do nothing
+
 				} else {
 					//Break after reading keys
 					break;
@@ -113,7 +112,7 @@ function rewriteSAM(samFilePath) {
 				//console.dir(keys);
 				
 //				for (var i = 0; i < keysArray.length; i++) {
-					//output.push("@SQ\tSN:" + keys[keysArray[i]].chromosome + "\tLN:" + keys[keysArray[i]].chromosomeSize);
+//					sys.puts("@SQ\tSN:" + keys[keysArray[i]].chromosome + "\tLN:" + keys[keysArray[i]].chromosomeSize);
 //				}
 
 				var pilex = new Pile();

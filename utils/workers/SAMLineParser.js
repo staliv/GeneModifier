@@ -184,7 +184,7 @@ function parseLine(line, keys, next) {
 				}
 
 				
-				modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(oldCigar, oldMismatches));
+//				modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(oldCigar, oldMismatches));
 				modifiedLine.push("ZM:Z:" + key.changeset);
 
 				//Debug
@@ -261,7 +261,7 @@ function parseLine(line, keys, next) {
 			}
 
 			//Output score to current line
-			modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(line[5], oldMismatches));
+//			modifiedLine.push("YM:i:" + scoreCalculator.getAlignmentScore(line[5], oldMismatches));
 			modifiedLine.push("ZM:Z:" + key.changeset);
 
 /*			if (XA) {
@@ -289,6 +289,8 @@ function calculateMismatches(mismatches, sequence, reference) {
 
 	var matches = 0;
 	var newMismatches = [];
+	var pushZero = false;
+	
 	for (var i = 0; i < mismatches.length; i++) {
 		if (mismatches.substr(i, 1) === " ") {
 			newMismatches.push(matches);
@@ -296,9 +298,11 @@ function calculateMismatches(mismatches, sequence, reference) {
 			var differentReferenceBase = reference.substr(i, 1);
 
 			if (differentSequenceBase !== "-" && differentReferenceBase !== "-") {
-				newMismatches.push(differentSequenceBase);
+				newMismatches.push(differentReferenceBase);
+				pushZero = true;
 			}
 			else if (differentSequenceBase === "-") {
+				pushZero = false;
 				//Check if preceding base was also a deletion
 				if (sequence.substr(i - 1, 1) === "-") {
 					//Pop the 0-matched 
@@ -309,8 +313,10 @@ function calculateMismatches(mismatches, sequence, reference) {
 						newMismatches.pop();
 					}
 					newMismatches.push("^" + reference.substr(i, 1));
+					pushZero = true;
 				}
 			} else if (differentReferenceBase === "-") {
+				pushZero = false;
 				if (newMismatches[newMismatches.length - 1] === 0) {
 					newMismatches.pop();
 				}
@@ -321,7 +327,7 @@ function calculateMismatches(mismatches, sequence, reference) {
 			matches++;
 		}
 	}
-	if (matches > 0) {
+	if (matches > 0 || (matches === 0 && pushZero)) {
 		newMismatches.push(matches);
 	}
 	if (newMismatches.length === 0) {
