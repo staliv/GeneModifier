@@ -7,6 +7,7 @@ var fileLineReader = require("./FileLineReader");
 var exec = require("child_process").exec;
 var cores = require("os").cpus().length;
 var Worker = require("../node_modules/worker").Worker;
+var settings = require("../settings").settings;
 
 
 //Accepts a merged .sam file sorted on the read ID and keeps only the best match based on YM:i
@@ -17,8 +18,8 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 2
 	else {
 		keepBestMatch(process.argv[process.argv.length - 1], function(error, message) {
 			if (error) {
-				sys.puts(error.message);
-				return;
+				sys.error(error.message);
+//				return;
 			}
 			//sys.puts(message);
 		});
@@ -27,11 +28,15 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 2
 
 exports.keepBestMatch = keepBestMatch;
 
+var parseCount = 0;
+var filesToParse = [];
+var pileFiles = null;
 //Returns callback(error, message)
 function keepBestMatch(samFilePath) {
 
 	var callback = arguments[arguments.length - 1];
 	if (typeof(callback) !== 'function') callback = function(){};
+
 
 	path.exists(samFilePath, function(exists) {
 		if (!exists) {
@@ -41,13 +46,79 @@ function keepBestMatch(samFilePath) {
 				if (error) {return callback(error); }
 
 				nrOfLines = parseFloat(trim(stdout).split(" ")[0]);
-				lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
 
-				commenceIteration(1);
+				splitToFiles(samFilePath, function(error, files) {
+					if (error) { return callback(error); }
+					filesToParse = files;
+					pileFiles = new Pile();
+					sys.error("Received " + filesToParse.length + " files");
+					filesToParse.forEach(function(element, i) {
+						pileFiles.add(function parseFile(next) {
+							sys.error("Parsing " + filesToParse[i][0] + "...");
+							lineReader = null;
+							lineReader = fileLineReader.FileLineReader(filesToParse[i][0], 1024 * 128);
+							parseCount++;
+							commenceIteration(1, filesToParse[i][1], function(error, message) {
+								--parseCount;
+								sys.error("Finished parsing " + filesToParse[i][0]);
+								if (settings.removeIntermediateFiles) {
+									sys.error("Removing " + filesToParse[i][0]);
+									fs.unlinkSync(filesToParse[i][0]);
+								}
+								next();
+							});
+						});
+					});
+					pileFiles.run(function() {}, 1);
+				});
 				
 			});
 		}
 	});
+}
+
+function splitToFiles(samFile, callback) {
+	
+	var maxNumberOfLines = Math.round((nrOfLines / 10));
+	var files = [];
+	if (nrOfLines > maxNumberOfLines) {
+
+		var nrOfWholeSplits = Math.floor(nrOfLines / maxNumberOfLines);
+		var lastSplit = nrOfLines - (nrOfWholeSplits * maxNumberOfLines);
+		var splits = [];
+		for (var i=0; i < nrOfWholeSplits; i++) {
+			splits.push(maxNumberOfLines);
+		}
+		if (lastSplit > 0) {
+			splits.push(lastSplit);
+		}
+		
+		//Split file to a maximum number of lines
+		var alreadySplitted = 0;
+		var splitCounter = 0;
+		var splitFiles = [];
+//		for (var i=0; i < splits.length; i++) {
+		splits.forEach(function(element, i) {
+			splitCounter++;
+			splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+			alreadySplitted += splits[i];
+			exec("head -n " + (alreadySplitted + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+				if (error) {return callback(error); }
+				if (stderr) {sys.error(stderr); }
+				files[i] = [splitFiles[i], splits[i]];
+//				sys.error(i + " : " + splits.length);
+				--splitCounter;
+				if (splitCounter === 0) {
+					sys.error("Splitted to " + files.length + " files.");
+					callback(null, files);
+				}
+			});
+		});
+		
+	} else {
+		files.push([samFile, nrOfLines]);
+		callback(null, files);
+	}
 }
 
 function trim(string) {
@@ -65,7 +136,7 @@ var iterationStartTime = null;
 var lines = [];
 var remainingLines = [];
 
-function commenceIteration(iteration, next) {
+function commenceIteration(iteration, nrOfLines, callback) {
 
 	var nrOfIterations = Math.ceil(nrOfLines / linesPerIteration);
 	if (iteration > 1) {
@@ -166,9 +237,10 @@ function commenceIteration(iteration, next) {
 	pilex.run(function() {
 		sys.error("Iteration " + (iteration) + " is complete.");
 		if (((iteration) * linesPerIteration) < nrOfLines) {
-			commenceIteration(iteration + 1);
+			commenceIteration(iteration + 1, callback);
 		} else {
 			sys.error("Parsed " + totalCounter + " lines.");
+			callback(null, "");
 		}
 	}, cores);
 }
