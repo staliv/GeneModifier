@@ -590,7 +590,7 @@ function performVariantCalling(bamFile, changeSet) {
 				//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
 									var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
 				//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-									exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling indels.");
 						
