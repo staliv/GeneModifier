@@ -37,7 +37,9 @@ function createVCF(file) {
 			var lineReader = fileLineReader.FileLineReader(file, 1024 * 128),
 				line = null,
 				splitLine = [],
-				vcf = [];
+				vcf = [],
+				lineCounter = 0,
+				changeSetName = path.basename(file, ".cs");
 				
 			vcf.push("##fileformat=VCFv4.0");
 			vcf.push("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
@@ -45,16 +47,19 @@ function createVCF(file) {
 			while (true) {
 				line = lineReader.nextLine();
 				splitLine = line.split("\t");
+				lineCounter++;
+				
 				if (line.substr(0, 1) !== "#") {
 					var referenceBase = null;
+
 					if (splitLine[3].substr(0, 1) === "I") {
 						referenceBase = getReferenceBase(splitLine[0], parseFloat(splitLine[1]) - 1);
-						vcf.push(splitLine[0] + "\t" + splitLine[1] + "\t.\t" + referenceBase + "\t" + referenceBase + splitLine[5] + "\t.\t.\t.\t.");
+						vcf.push(splitLine[0] + "\t" + splitLine[1] + "\t" + changeSetName + "_" + lineCounter + "\t" + referenceBase + "\t" + referenceBase + splitLine[5] + "\t.\t.\t.\t.");
 					}
 
 					if (splitLine[3].substr(0, 1) === "D") {
 						referenceBase = getReferenceBase(splitLine[0], parseFloat(splitLine[1]) - 1);
-						vcf.push(splitLine[0] + "\t" + splitLine[1] + "\t.\t" + referenceBase + splitLine[4] + "\t" + referenceBase + "\t.\t.\t.\t.");
+						vcf.push(splitLine[0] + "\t" + splitLine[1] + "\t" + changeSetName + "_" + lineCounter + "\t" + referenceBase + splitLine[4] + "\t" + referenceBase + "\t.\t.\t.\t.");
 					}
 				
 					if (!lineReader.hasNextLine()) {
