@@ -248,13 +248,16 @@ function continueWithSorting(rewrittenSAMPath, referenceSAMPath, changeSet) {
 		exec("cat " + headers + " " + rewrittenSAMPath + " > " + withHeadersPath, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
 
-			rewrittenSAMPath = withHeadersPath;
-			console.log("Finished adding headers to  " + rewrittenSAMPath);
 
 			if (removeIntermediateFiles) {
 				console.log("Removing " + headers);
 				fs.unlinkSync(headers);
+				console.log("Removing " + rewrittenSAMPath);
+				fs.unlinkSync(rewrittenSAMPath);
 			}
+
+			rewrittenSAMPath = withHeadersPath;
+			console.log("Finished adding headers to  " + rewrittenSAMPath);
 	
 			console.log("Convert rewritten SAM to BAM...");
 			var rewrittenBAM = path.dirname(rewrittenSAMPath) + "/" + path.basename(rewrittenSAMPath, ".sam") + ".bam";
@@ -555,7 +558,8 @@ function performVariantCalling(bamFile, changeSet) {
 					console.log("Realign BAM to get better Indel calling...");
 					//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
 					var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
-					exec(gatk + " -T IndelRealigner -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+					var realignLog = path.dirname(bamFile) + "/GATK_" + path.basename(bamFile, ".bam") + "_realign.log";
+					exec(gatk + " -T IndelRealigner -l " + settings.gatkLogLevel + " -log " + realignLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 						if (error) { return callback(error); }
 						console.log("Finished realigning for indels.");
 
@@ -589,15 +593,17 @@ function performVariantCalling(bamFile, changeSet) {
 				//					java -jar GenomeAnalysisTK.jar –R ref.fasta -T UnifiedGenotyper –L mytargets.list –I myreads.bam –o mycalls.vcf -B:dbsnp,VCF dbsnp.vcf -glm DINDEL
 				//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
 									var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
+									var indelLog = path.dirname(bamFile) + "/GATK_" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.log";
 				//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling indels.");
 						
 										console.log("Call SNPs...");
 										//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
 										var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
-										exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+										var snpLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_snps.log";
+										exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + snpLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 											if (error) { return callback(error); }
 											console.log("Finished calling SNPs.");
 											console.log("Finished variant calling on " + bamFile);
