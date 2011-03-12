@@ -595,7 +595,7 @@ function performVariantCalling(bamFile, changeSet) {
 									var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
 									var indelLog = path.dirname(bamFile) + "/GATK_" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.log";
 				//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -B:indels,VCF " + vcfFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling indels.");
 						
