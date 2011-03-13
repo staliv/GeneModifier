@@ -53,9 +53,9 @@ function outputGeneToFile(geneData) {
 	var callback = arguments[arguments.length - 1];
 	if (typeof(callback) !== 'function') callback = function(){};
 	
-	var extraBasePairs = 300;
-	var geneName = geneData['value'];
-	var genePosition = geneData['id'];
+	var extraBasePairs = 2000;
+	var geneName = geneData.value;
+	var genePosition = geneData.id;
 	var chromosomeName = genePosition.replace(/,/g, '').split(':')[0];
 	var chromosomeFilePath = "./chromosomes/" + chromosomeName + ".fa";
 	var start = parseFloat(genePosition.replace(/,/g, '').split(':')[1].split('-')[0]) - extraBasePairs - 1;
@@ -131,7 +131,7 @@ function getGeneLocation(geneName) {
 			else {
 				return callback(new Error("Could not find a matching gene named '" + geneName + "' from " + options.host + "."));
 			}
-		})
+		});
 	}).on('error', function(error) {
 		console.error("Error trying to retrieve gene location from " + options.host + ": " + error.message);
 		return callback(error);
