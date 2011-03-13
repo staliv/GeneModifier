@@ -4,6 +4,8 @@ var fs = require("fs");
 var path = require("path");
 var sys = require("sys");
 var fileLineReader = require("./FileLineReader");
+var exec = require("child_process").exec;
+var settings = require("../settings").settings;
 
 var Worker = require("../node_modules/worker").Worker;
 
@@ -57,9 +59,52 @@ Pile.prototype = {
 		}
 	}
 };
+var parseCount = 0;
+var filesToParse = [];
+var pileFiles = new Pile();
+var nrOfLines = 0;
+function rewriteSAM(samFilePath) {
+
+	var callback = arguments[arguments.length - 1];
+	if (typeof(callback) !== 'function') callback = function(){};
+
+	exec("wc -l " + samFilePath, function(error, stdout, stderr) {
+		if (error) {return callback(error); }
+
+		nrOfLines = parseFloat(trim(stdout).split(" ")[0]);
+
+		splitToFiles(samFilePath, function(error, files) {
+			if (error) {return callback(error); }
+
+			filesToParse = files;
+		
+			filesToParse.forEach(function(element, i) {
+
+				pileFiles.add(function parseFile(next) {
+					parseCount++;
+					sys.error("Parsing " + filesToParse[i][0] + "...");
+					rewriteSAMFile(filesToParse[i][0], function(error, message) {
+						if (error) {return callback(error); }
+						--parseCount;
+						sys.error("Finished parsing " + filesToParse[i][0]);
+						if (settings.removeIntermediateFiles) {
+							sys.error("Removing " + filesToParse[i][0]);
+							fs.unlinkSync(filesToParse[i][0]);
+						}
+						next();
+					});
+				});
+			
+			});
+			pileFiles.run(function() {}, 1);
+		
+		});
+	});
+}
+var keysArray = [];
 
 //Returns callback(error, message)
-function rewriteSAM(samFilePath) {
+function rewriteSAMFile(samFilePath) {
 
 	var callback = arguments[arguments.length - 1];
 	if (typeof(callback) !== 'function') callback = function(){};
@@ -67,7 +112,6 @@ function rewriteSAM(samFilePath) {
 	path.exists(samFilePath, function(exists) {
 		if (exists) {
 			var lineReader = fileLineReader.FileLineReader(samFilePath, 1024 * 128);
-			var keysArray = [];
 			var line = null;
 			while (lineReader.hasNextLine()) {
 				line = lineReader.nextLine();
@@ -119,10 +163,10 @@ function rewriteSAM(samFilePath) {
                 var linesPerParser = 20000;
                 var lines = [];
                 var splitLine = null;
-
+				var lineIteratorCount = 0;
 				while (true) {
 					splitLine = line.split("\t");
-
+					lineIteratorCount++;
 					if (!(parseInt(splitLine[1], 10) & 4)) {
 
                         lines.push(line);
@@ -141,11 +185,13 @@ function rewriteSAM(samFilePath) {
 
 				}
 
+				sys.error("Iterated " + lineIteratorCount + " lines.");
 				for (var i=0; i < allLines.length; i++) {
 					pilex.add(function createParser(next) {
 
 						var lineParser = new Worker("./utils/workers/SAMLineParser.js");
 
+						sys.error("Sent " + allLines[lineCounter].length) + " lines.";
 						lineParser.postMessage({"lines": allLines[lineCounter], "keys": keys});
 						lineCounter++;
 
@@ -157,6 +203,7 @@ function rewriteSAM(samFilePath) {
 						};
 */							
 						lineParser.addListener("message", function (msg) {
+							sys.error("Got " + msg.out.length + " lines.");
 							sys.puts(msg.out.join("\n"));
 							lineParser.terminate();
 							lineParser.kill();
@@ -167,13 +214,61 @@ function rewriteSAM(samFilePath) {
 //				var beginTime = new Date().getTime();
 				var threads = require("os").cpus().length;
 //				pilex.run(function() {console.log("Completed in " + (new Date().getTime() - beginTime) / 1000 + " seconds with " + threads + " threads.")}, threads);
-				pilex.run(function() {}, threads);
+				pilex.run(function() {allLines = []; lineCounter = 0; callback(null, "OK");}, threads);
 				
 		} else {
 			return callback(new Error("The file: " + samFilePath + " does not exist."));
 		}
 	});
 
+}
+
+function splitToFiles(samFile, callback) {
+	
+	var maxNumberOfLines = Math.round((nrOfLines / 4));
+	var files = [];
+	if (nrOfLines > maxNumberOfLines) {
+
+		var nrOfWholeSplits = Math.floor(nrOfLines / maxNumberOfLines);
+		var lastSplit = nrOfLines - (nrOfWholeSplits * maxNumberOfLines);
+		var splits = [];
+		for (var i=0; i < nrOfWholeSplits; i++) {
+			splits.push(maxNumberOfLines);
+		}
+		if (lastSplit > 0) {
+			splits.push(lastSplit);
+		}
+		
+		//Split file to a maximum number of lines
+		var alreadySplitted = 0;
+		var splitCounter = 0;
+		var splitFiles = [];
+//		for (var i=0; i < splits.length; i++) {
+		splits.forEach(function(element, i) {
+			splitCounter++;
+			splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+			alreadySplitted += splits[i];
+			exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+				if (error) {return callback(error); }
+				if (stderr) {sys.error(stderr); }
+				files[i] = [splitFiles[i], splits[i]];
+//				sys.error(i + " : " + splits.length);
+				--splitCounter;
+				if (splitCounter === 0) {
+					sys.error("Splitted to " + files.length + " files.");
+					callback(null, files);
+				}
+			});
+		});
+		
+	} else {
+		files.push([samFile, nrOfLines]);
+		callback(null, files);
+	}
+}
+
+function trim(string) {
+    return string.replace(/^\s*|\s*$/, '');
 }
 
 function getChromosomeSizes(keysArray, keys, next) {
