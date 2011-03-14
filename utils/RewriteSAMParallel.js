@@ -185,13 +185,13 @@ function rewriteSAMFile(samFilePath) {
 
 				}
 
-				sys.error("Iterated " + lineIteratorCount + " lines.");
+//				sys.error("Iterated " + lineIteratorCount + " lines.");
 				for (var i=0; i < allLines.length; i++) {
 					pilex.add(function createParser(next) {
 
 						var lineParser = new Worker("./utils/workers/SAMLineParser.js");
 
-						sys.error("Sent " + allLines[lineCounter].length) + " lines.";
+//						sys.error("Sent " + allLines[lineCounter].length) + " lines.";
 						lineParser.postMessage({"lines": allLines[lineCounter], "keys": keys});
 						lineCounter++;
 
@@ -203,7 +203,7 @@ function rewriteSAMFile(samFilePath) {
 						};
 */							
 						lineParser.addListener("message", function (msg) {
-							sys.error("Got " + msg.out.length + " lines.");
+//							sys.error("Got " + msg.out.length + " lines.");
 							sys.puts(msg.out.join("\n"));
 							lineParser.terminate();
 							lineParser.kill();
