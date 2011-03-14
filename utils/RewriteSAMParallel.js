@@ -225,7 +225,7 @@ function rewriteSAMFile(samFilePath) {
 
 function splitToFiles(samFile, callback) {
 	
-	var maxNumberOfLines = Math.round((nrOfLines / 4));
+	var maxNumberOfLines = Math.round((nrOfLines / 8));
 	var files = [];
 	if (nrOfLines > maxNumberOfLines) {
 
