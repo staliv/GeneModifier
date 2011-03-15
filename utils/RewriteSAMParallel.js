@@ -20,7 +20,8 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 2
 	else {
 		rewriteSAM(process.argv[process.argv.length - 1], function(error, message) {
 			if (error) {
-				sys.puts(error.message);
+				console.error(error);
+				console.dir(error);
 				return;
 			}
 //			sys.puts("Done");
