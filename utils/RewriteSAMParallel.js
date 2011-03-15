@@ -233,7 +233,7 @@ function rewriteSAMFile(samFilePath) {
 
 function splitToFiles(samFile, callback) {
 	
-	var maxNumberOfLines = Math.round((nrOfLines / 8));
+	var maxNumberOfLines = Math.round((nrOfLines / 2));
 	var files = [];
 	if (nrOfLines > maxNumberOfLines) {
 
@@ -248,26 +248,52 @@ function splitToFiles(samFile, callback) {
 		}
 		
 		//Split file to a maximum number of lines
-		var alreadySplitted = 0;
 		var splitCounter = 0;
 		var splitFiles = [];
+		
 //		for (var i=0; i < splits.length; i++) {
-		splits.forEach(function(element, i) {
-			splitCounter++;
+//		splits.forEach(function(element, i) {
+		var i = 0;
+//			splitCounter++;
+		splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+		
+		exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+			if (error) {return callback(error); }
+			if (stderr) {sys.error(stderr); }
+			files[i] = [splitFiles[i], splits[i]];
+			sys.error(i + " : " + (splits.length - 1));
+//			--splitCounter;
+			i = 1;
 			splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
-			alreadySplitted += splits[i];
 			exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
 				if (error) {return callback(error); }
 				if (stderr) {sys.error(stderr); }
 				files[i] = [splitFiles[i], splits[i]];
-//				sys.error(i + " : " + splits.length);
-				--splitCounter;
-				if (splitCounter === 0) {
+				sys.error(i + " : " + (splits.length - 1));
+//				--splitCounter;
+
+				if (splits.length === 3) {
+					i = 2;
+					splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+					exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+						if (error) {return callback(error); }
+						if (stderr) {sys.error(stderr); }
+						files[i] = [splitFiles[i], splits[i]];
+						sys.error(i + " : " + (splits.length - 1));
+	//					--splitCounter;
+						sys.error("Splitted to " + files.length + " files.");
+						callback(null, files);
+
+					});
+				}else {
+					
+//				if (splitCounter === 0) {
 					sys.error("Splitted to " + files.length + " files.");
 					callback(null, files);
 				}
 			});
 		});
+//		});
 		
 	} else {
 		files.push([samFile, nrOfLines]);
