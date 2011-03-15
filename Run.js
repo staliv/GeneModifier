@@ -97,7 +97,7 @@ function run(genes, changeSet) {
 				//Align
 				console.log("Aligning modified genome with " + fastq + "...");
 				var saiFile = path.dirname(fileName) + "/" + path.basename(fileName, ".fa") + ".sai";
-				exec(bwa + " aln -t " + cores + " " + fileName + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
+				exec(bwa + " aln -o 2 -n 7 -t " + cores + " " + fileName + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished alignment against modified genome.");
 					//Create SAM
@@ -183,7 +183,7 @@ function run(genes, changeSet) {
 
 											console.log("Aligning reference genome with " + fastq + "...");
 											//Align
-											exec(bwa + " aln -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
+											exec(bwa + " aln  -o 2 -n 7 -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
 												if (error) { return callback(error); }
 												console.log("Finished alignment against reference genome.");
 
