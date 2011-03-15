@@ -139,6 +139,7 @@ function run(genes, changeSet) {
 							console.log("Rewriting modified SAM...");
 							var rewrittenSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rewritten.sam";
 							exec(node + " utils/RewriteSAMParallel.js " + samFile + " > " + rewrittenSAM, {maxBuffer: 10000000*1024}, function (error, stdout, stderr) {
+								if (stderr) { console.log(stderr); }
 								if (error) { return callback(error); }
 								console.log("Finished rewriting modified SAM to: " + rewrittenSAM);
 
@@ -543,7 +544,7 @@ function performVariantCalling(bamFile, changeSet) {
 			console.log("Identify target regions for realignment...");
 		//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
 			var intervalsDescriptor = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".intervals";
-			exec(gatk + " -T RealignerTargetCreator -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+			exec(gatk + " -T RealignerTargetCreator --mismatchFraction 0 --windowSize 30 -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished identifying target regions.");
 
@@ -559,7 +560,7 @@ function performVariantCalling(bamFile, changeSet) {
 					//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
 					var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
 					var realignLog = path.dirname(bamFile) + "/GATK_" + path.basename(bamFile, ".bam") + "_realign.log";
-					exec(gatk + " -T IndelRealigner -l " + settings.gatkLogLevel + " -log " + realignLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+					exec(gatk + " -T IndelRealigner -l " + settings.gatkLogLevel + " -log " + realignLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile + " -knownsOnly", {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 						if (error) { return callback(error); }
 						console.log("Finished realigning for indels.");
 
