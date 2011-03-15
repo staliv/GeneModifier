@@ -361,7 +361,7 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 		console.log("Add read group to reference BAM...");
 		var referenceSAM = path.dirname(referenceBAM) + "/" + path.basename(referenceBAM, ".sorted.bam") + ".sam";
 		var referenceSAMRG = path.dirname(referenceSAM) + "/" + path.basename(referenceSAM, ".sam") + ".rg.sam";
-		exec(samtools + " view -h -o " + referenceSAM + " " + referenceBAM + " ; perl utils/AddReadGroup.pl -i " + referenceSAM + " -o " + referenceSAMRG + " -s " + path.basename(changeSet, ".cs") + " -r reference -p ILLUMINA; " + samtools + " view -S -b -h -o " + referenceBAM + " " + referenceSAMRG, function(error, stdout, stderr) {
+		exec(samtools + " view -h -o " + referenceSAM + " " + referenceBAM + " ; perl utils/AddReadGroup.pl -i " + referenceSAM + " -o " + referenceSAMRG + " -s " + path.basename(changeSet, ".cs") + "_reference -r reference -p ILLUMINA; " + samtools + " view -S -b -h -o " + referenceBAM + " " + referenceSAMRG, function(error, stdout, stderr) {
 			if (error) { return callback(error); }
 			console.log("Finished adding read group to reference BAM.");
 
@@ -416,8 +416,8 @@ function mergeAndKeep(rewrittenBAM, referenceBAM, referenceSAMPath, changeSet) {
 			
 			//Add read groups to header
 			console.log("Adding read groups to header...");
-			var readGroupReference = "@RG	ID:reference.scored.sorted	SM:" + path.basename(changeSet, ".cs") + "	PL:ILLUMINA";
-			var readGroupModified = "@RG	ID:" + path.basename(changeSet, ".cs") + ".scored.rewritten.headers.sorted	SM:" + path.basename(changeSet, ".cs") + "	PL:ILLUMINA";
+			var readGroupReference = "@RG	ID:reference.scored.sorted	SM:" + path.basename(changeSet, ".cs") + "_modified	PL:ILLUMINA";
+			var readGroupModified = "@RG	ID:" + path.basename(changeSet, ".cs") + ".scored.rewritten.headers.sorted	SM:" + path.basename(changeSet, ".cs") + "_modified	PL:ILLUMINA";
 			var readGroupsFile = path.dirname(samFile) + "/readgroups.sam";
 			var newSAM = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".rg.sam";
 			exec('echo "' + readGroupReference + '" > ' + readGroupsFile + ' ; echo "' + readGroupModified + '" >> ' + readGroupsFile + ' ; cat ' + readGroupsFile + ' ' + samFile + ' > ' + newSAM, function(error, stdout, stderr) {
@@ -498,7 +498,53 @@ function initiateVariantCalling(bamFiles, changeSet) {
 	if (typeof(callback) !== 'function') callback = function(){};
 
 	console.log("Starting variant and indel calling...");
+
+	//Merge the bam-files
+	var mergedFile = path.dirname(bamFiles[0]) + "/" + path.basename(changeSet, ".cs") + "_merged.bam";
+	console.log("Merging reference and modified genome to " + mergedFile + "...");
+	exec(samtools + " merge -r " + mergedFile + " " + bamFiles[0] + " " + bamFiles[1], function(error, stdout, stderr) {
+		if (error) { return callback(error); }
+		console.log("Finished merging.");
+
+		console.log("Add missing read group to reference BAM...");
+		var SAM = path.dirname(mergedFile) + "/" + path.basename(mergedFile, ".bam") + ".sam";
+		var SAMRG = path.dirname(SAM) + "/" + path.basename(SAM, ".sam") + ".rg.sam";
+		var readGroupReference = "@RG	ID:reference	SM:" + path.basename(changeSet, ".cs") + "_reference	PL:ILLUMINA";
+		var readGroupsFile = path.dirname(mergedFile) + "/reference_readgroup.sam";
+
+		exec("echo \"" + readGroupReference + "\" > " + readGroupsFile + " ;" + samtools + " view -h -o " + SAM + " " + mergedFile + " ; cat " + readGroupsFile + " " + SAM + " > " + SAMRG + " ; " + samtools + " view -S -b -h -o " + mergedFile + " " + SAMRG, function(error, stdout, stderr) {
+			if (error) { return callback(error); }
+			console.log("Finished adding missing read group.");
+
+			if (removeIntermediateFiles) {
+				console.log("Removing " + readGroupsFile);
+				fs.unlinkSync(readGroupsFile);
+				console.log("Removing " + SAM);
+				fs.unlinkSync(SAM);
+				console.log("Removing " + SAMRG);
+				fs.unlinkSync(SAMRG);
+				console.log("Removing " + bamFiles[0]);
+				fs.unlinkSync(bamFiles[0]);
+				console.log("Removing " + bamFiles[1]);
+				fs.unlinkSync(bamFiles[1]);
+			}
+
+			console.log("Indexing " + mergedFile + "...");
+			exec(samtools + " index " + mergedFile, function(error, stdout, stderr) {
+				if (error) { return callback(error); }
+				console.log("Finished indexing of " + mergedFile);
+
+				performVariantCalling(mergedFile, changeSet, function(error, message) {
+					if (error) { return callback(error); }
+					console.log("Finished variant and indel calling.");
+					callback(null, "OK");
+				});
+			});
+		});
+	});
 	
+
+/*	
 	performVariantCalling(bamFiles[0], changeSet, function(error, message) {
 		if (error) { return callback(error); }
 
@@ -508,6 +554,7 @@ function initiateVariantCalling(bamFiles, changeSet) {
 			callback(null, "OK");
 		});
 	});
+*/
 }
 
 /*
@@ -541,12 +588,13 @@ function performVariantCalling(bamFile, changeSet) {
 			if (error) { return callback(error); }
 			console.log("Finished indexing baq BAM.");
 
-			console.log("Identify target regions for realignment...");
-		//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
-			var intervalsDescriptor = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".intervals";
-			exec(gatk + " -T RealignerTargetCreator --mismatchFraction 0 --windowSize 30 -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+			console.log("Call first round SNPs...");
+			//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
+			var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_temp_snps.vcf";
+			var snpLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_temp_snps.log";
+			exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + snpLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
-				console.log("Finished identifying target regions.");
+				console.log("Finished calling first round SNPs.");
 
 				//Create VCF from changeset indels
 				console.log("Creating VCF with indels from changeset...");
@@ -554,66 +602,56 @@ function performVariantCalling(bamFile, changeSet) {
 				exec(node + " utils/CreateVCFIndelsFromCS.js " + changeSet + " > " + vcfFile, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished creating VCF.");
-					
-		
-					console.log("Realign BAM to get better Indel calling...");
-					//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
-					var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
-					var realignLog = path.dirname(bamFile) + "/GATK_" + path.basename(bamFile, ".bam") + "_realign.log";
-					exec(gatk + " -T IndelRealigner -l " + settings.gatkLogLevel + " -log " + realignLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile + " -knownsOnly", {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+
+					console.log("Identify target regions for realignment...");
+				//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T RealignerTargetCreator -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam  -o /output/FOO.intervals
+					var intervalsDescriptor = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".intervals";
+					exec(gatk + " -T RealignerTargetCreator --mismatchFraction 0 --windowSize 30 -B:snps,VCF " + SNPFile + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -o " + intervalsDescriptor, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 						if (error) { return callback(error); }
-						console.log("Finished realigning for indels.");
+						console.log("Finished identifying target regions.");
 
-						if (removeIntermediateFiles) {
-							console.log("Removing " + intervalsDescriptor);
-							fs.unlinkSync(intervalsDescriptor);
-						}
-			
-						//Make a copy to use for SNP calling
-		//				console.log("Create copy for SNP calling...");
-		//				var baqBAM2 = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".bam") + ".snp.bam";
-		//				exec("cp " + baqBAM + " " + baqBAM2, function(error, stdout, stderr) {
-		//					if (error) { return callback(error); }
-		//					console.log("Finished creating copy to: " + baqBAM2);
-
-
-		//					console.log("Reindex the copy...");
-							//	samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
-		//					exec(samtools + " index " + baqBAM2, function(error, stdout, stderr) {
-		//						if (error) { return callback(error); }
-		//						console.log("Finished reindexing the copy.");
-				
-								console.log("Reindex the realigned BAM...");
-								//	samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
-								exec(samtools + " index " + realignedBAM, function(error, stdout, stderr) {
-									if (error) { return callback(error); }
-									console.log("Finished reindexing the realigned BAM.");
 					
-									console.log("Call Indels...");
-									//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelGenotyperV2 -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -O /output/FOO_indel.txt --verbose -o /output/FOO_indel_statistics.txt
-				//					java -jar GenomeAnalysisTK.jar –R ref.fasta -T UnifiedGenotyper –L mytargets.list –I myreads.bam –o mycalls.vcf -B:dbsnp,VCF dbsnp.vcf -glm DINDEL
-				//					var indelStats = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".realigned.baq.bam") + "_indel_stats.txt";
-									var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
-									var indelLog = path.dirname(bamFile) + "/GATK_" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.log";
-				//					exec(gatk + " -T IndelGenotyperV2 -R " + referenceGenome + " -I " + baqBAM + " -O " + indels + " --verbose -o " + indelStats, function(error, stdout, stderr) {
-									exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -B:indels,VCF " + vcfFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
-										if (error) { return callback(error); }
-										console.log("Finished calling indels.");
-						
-										console.log("Call SNPs...");
-										//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
-										var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
-										var snpLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_snps.log";
-										exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + snpLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
-											if (error) { return callback(error); }
-											console.log("Finished calling SNPs.");
-											console.log("Finished variant calling on " + bamFile);
+						console.log("Realign BAM to get better Indel calling...");
+						//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelRealigner -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.bam -targetIntervals /output/FOO.intervals --output /output/FOO.sorted.realigned.bam
+						var realignedBAM = path.dirname(bamFile) + "/" + path.basename(bamFile, ".bam") + ".realigned.bam";
+						var realignLog = path.dirname(bamFile) + "/GATK_" + path.basename(bamFile, ".bam") + "_realign.log";
+						exec(gatk + " -T IndelRealigner -l " + settings.gatkLogLevel + " -log " + realignLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + bamFile + " -targetIntervals " + intervalsDescriptor + " -o " + realignedBAM + " -D " + settings.dbSNP + " -B:indels,VCF " + vcfFile + " -LOD 3.0", {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+							if (error) { return callback(error); }
+							console.log("Finished realigning for indels.");
+
+							if (removeIntermediateFiles) {
+								console.log("Removing " + intervalsDescriptor);
+								fs.unlinkSync(intervalsDescriptor);
+							}
 							
-											callback(null, "OK");
-										});						
+							console.log("Reindex the realigned BAM...");
+							//	samtools index /output/FOO.sorted.realigned.bam /output/FOO.sorted.realigned.bam.bai
+							exec(samtools + " index " + realignedBAM, function(error, stdout, stderr) {
+								if (error) { return callback(error); }
+								console.log("Finished reindexing the realigned BAM.");
+			
+								console.log("Call Indels ...");
+								//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelGenotyperV2 -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -O /output/FOO_indel.txt --verbose -o /output/FOO_indel_statistics.txt
+								var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
+								var indelLog = path.dirname(bamFile) + "/GATK_" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.log";
+								exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -B:indels,VCF " + vcfFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									if (error) { return callback(error); }
+									console.log("Finished calling indels.");
+
+									console.log("Call SNPs with indel masking...");
+									//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
+									var trueSNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
+									var trueSNPLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_snps.log";
+									exec(gatk + " -T UnifiedGenotyper -B:mask,VCF " + indels + " -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + trueSNPLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + trueSNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+										if (error) { return callback(error); }
+										console.log("Finished calling SNPs.");
+				
+										console.log("Finished variant calling on " + bamFile);
+					
+										callback(null, "OK");
 									});
-		//						});
-		//					});
+								});						
+							});
 						});
 					});
 				});
