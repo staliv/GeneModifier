@@ -55,7 +55,7 @@ function parseLine(line, keys, next) {
 	var SAMPositionZeroBased = (parseFloat(line[3]) - 1);
 	//POS should be backmapped from (modified genome startPosition + position in sam)
 	positionBackMapper.backMap("genes/modified/" + key.gene + "_" + key.changeset + ".fa", key.startPosition + SAMPositionZeroBased, function(error, referencePosition) {
-		if (error) return error.message;
+		if (error) { return callback(error); }
 
 		var changes = changesMade(key, referencePosition, line[9].length);
 
@@ -85,6 +85,7 @@ function parseLine(line, keys, next) {
 			var child = exec(exonerate + " -n 1 --showcigar --exhaustive --model affine:global --showalignment 1 " + sequenceFileName + " " + reference.fileName, function (error, stdout, stderr) {
 
 				if (error) {
+					sys.error(error.message);
 					//Breakpoint insertion for debugging
 					error = error;
 				}
@@ -436,13 +437,13 @@ function createReferenceFile(sequence, chromosomeName, referencePosition, change
 
 	return {"fileName": referenceFileName, "sequence": referenceSequence};
 }
-
+/*
 function reverseComplement(sequence) {
 	sequence = complement(sequence);
 	sequence = sequence.split("").reverse().join("");
 	return sequence;
 }
-
+*/
 function getNrOfLineBreaks(number, charsPerLine) {
 	charsPerLine = (charsPerLine === undefined) ? 50: charsPerLine;
 	var result = Math.floor(number/charsPerLine);
@@ -479,7 +480,7 @@ function changesMade(key, position, sequenceLength) {
 	}
 	return changes;
 }
-
+/*
 function complement(dnaSequence)	{
 	//there is no tr operator
 	//should write a tr method to replace this
@@ -542,3 +543,4 @@ function complement(dnaSequence)	{
 		
 	return dnaSequence;
 }
+*/

@@ -209,6 +209,13 @@ function rewriteSAMFile(samFilePath) {
 							lineParser.kill();
 							next();
 						});
+						lineParser.on("error", function (error) {
+//							sys.error("Got " + msg.out.length + " lines.");
+							sys.error(error);
+							lineParser.terminate();
+							lineParser.kill();
+							next();
+						});
 					});
 				}
 //				var beginTime = new Date().getTime();
