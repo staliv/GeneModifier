@@ -530,6 +530,7 @@ function initiateVariantCalling(bamFiles, changeSet) {
 			}
 
 			//Sort
+			console.log("Sorting " + mergedFile + "...");
 			var sortedBAM = path.dirname(mergedFile) + "/" + path.basename(mergedFile, ".bam") + ".sorted";
 			exec(samtools + " sort " + mergedFile + " " + sortedBAM, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
@@ -540,6 +541,7 @@ function initiateVariantCalling(bamFiles, changeSet) {
 				}
 	
 				mergedFile = sortedBAM + ".bam";
+				console.log("Finished sorting to " + mergedFile);
 
 				console.log("Indexing " + mergedFile + "...");
 				exec(samtools + " index " + mergedFile, function(error, stdout, stderr) {
