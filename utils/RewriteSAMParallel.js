@@ -233,7 +233,7 @@ function rewriteSAMFile(samFilePath) {
 
 function splitToFiles(samFile, callback) {
 	
-	var maxNumberOfLines = Math.round((nrOfLines / 2));
+	var maxNumberOfLines = Math.round((nrOfLines / 3));
 	var files = [];
 	if (nrOfLines > maxNumberOfLines) {
 
@@ -272,25 +272,35 @@ function splitToFiles(samFile, callback) {
 				sys.error(i + " : " + (splits.length - 1));
 //				--splitCounter;
 
-				if (splits.length === 3) {
-					i = 2;
-					splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
-					exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
-						if (error) {return callback(error); }
-						if (stderr) {sys.error(stderr); }
-						files[i] = [splitFiles[i], splits[i]];
-						sys.error(i + " : " + (splits.length - 1));
-	//					--splitCounter;
+				i = 2;
+				splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+				exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+					if (error) {return callback(error); }
+					if (stderr) {sys.error(stderr); }
+					files[i] = [splitFiles[i], splits[i]];
+					sys.error(i + " : " + (splits.length - 1));
+	//				--splitCounter;
+
+					if (splits.length === 4) {
+						i = 3;
+						splitFiles[i] = path.dirname(samFile) + "/" + path.basename(samFile, ".sam") + ".split" + i + ".sam";
+						exec("head -n " + ((splits[0] * i) + splits[i]) + " " + samFile + " | tail -n " + splits[i] + " > " + splitFiles[i], function(error, stdout, stderr) {
+							if (error) {return callback(error); }
+							if (stderr) {sys.error(stderr); }
+							files[i] = [splitFiles[i], splits[i]];
+							sys.error(i + " : " + (splits.length - 1));
+		//					--splitCounter;
+							sys.error("Splitted to " + files.length + " files.");
+							callback(null, files);
+
+						});
+					}else {
+					
+	//				if (splitCounter === 0) {
 						sys.error("Splitted to " + files.length + " files.");
 						callback(null, files);
-
-					});
-				}else {
-					
-//				if (splitCounter === 0) {
-					sys.error("Splitted to " + files.length + " files.");
-					callback(null, files);
-				}
+					}
+				});
 			});
 		});
 //		});
