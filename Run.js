@@ -11,7 +11,7 @@ var settings = require("./settings").settings;
 var log4js = require("./node_modules/log4js")();
 log4js.configure("./logs/config.json");
 
-var cores = require("os").cpus().length;
+var cores = require("os").cpus().length * 2;
 
 var samtools = settings.samtools;
 var bwa = settings.bwa;
@@ -529,15 +529,28 @@ function initiateVariantCalling(bamFiles, changeSet) {
 				fs.unlinkSync(bamFiles[1]);
 			}
 
-			console.log("Indexing " + mergedFile + "...");
-			exec(samtools + " index " + mergedFile, function(error, stdout, stderr) {
+			//Sort
+			var sortedBAM = path.dirname(mergedFile) + "/" + path.basename(mergedFile, ".bam") + ".sorted";
+			exec(samtools + " sort " + mergedFile + " " + sortedBAM, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
-				console.log("Finished indexing of " + mergedFile);
 
-				performVariantCalling(mergedFile, changeSet, function(error, message) {
+				if (removeIntermediateFiles) {
+					console.log("Removing " + mergedFile);
+					fs.unlinkSync(mergedFile);
+				}
+	
+				mergedFile = sortedBAM + ".bam";
+
+				console.log("Indexing " + mergedFile + "...");
+				exec(samtools + " index " + mergedFile, function(error, stdout, stderr) {
 					if (error) { return callback(error); }
-					console.log("Finished variant and indel calling.");
-					callback(null, "OK");
+					console.log("Finished indexing of " + mergedFile);
+
+					performVariantCalling(mergedFile, changeSet, function(error, message) {
+						if (error) { return callback(error); }
+						console.log("Finished variant and indel calling.");
+						callback(null, "OK");
+					});
 				});
 			});
 		});
