@@ -212,7 +212,7 @@ function rewriteSAMFile(samFilePath) {
 						});
 						lineParser.on("error", function (error) {
 //							sys.error("Got " + msg.out.length + " lines.");
-							sys.error(error);
+							sys.error("lineParser returned error: " + error.message);
 							lineParser.terminate();
 							lineParser.kill();
 							next();
