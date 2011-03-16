@@ -206,6 +206,11 @@ function rewriteSAMFile(samFilePath) {
 						lineParser.addListener("message", function (msg) {
 //							sys.error("Got " + msg.out.length + " lines.");
 							sys.puts(msg.out.join("\n"));
+							if (msg.error.length > 0) {
+								msg.error.forEach(function(element,i) {
+									sys.error(element);
+								});
+							}
 							lineParser.terminate();
 							lineParser.kill();
 							next();
