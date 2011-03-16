@@ -11,7 +11,7 @@ var settings = require("./settings").settings;
 var log4js = require("./node_modules/log4js")();
 log4js.configure("./logs/config.json");
 
-var cores = require("os").cpus().length * 2;
+var threads = require("os").cpus().length * 2;
 
 var samtools = settings.samtools;
 var bwa = settings.bwa;
@@ -53,7 +53,7 @@ if (process.argv.length > 1 && process.argv[1].substr(process.argv[1].length - 7
 				}
 				var endTime = new Date().getTime();
 				var jobTime = Math.round((endTime - startTime) / 1000);
-				console.log("Job completed on " + cores + " cores in " + jobTime + " seconds.");
+				console.log("Job completed on " + threads + " threads in " + jobTime + " seconds.");
 			});
 		} else {
 			sys.puts("Error in command line when calling Run.js.");
@@ -80,7 +80,7 @@ function run(genes, changeSet) {
 	var rewrittenSAMPath = null;
 	var referenceSAMPath = null;
 
-	console.log("Running job with " + cores + " cores.");
+	console.log("Running job with " + threads + " threads.");
 
 	//Modify genes
 	modifyGenes(genes, changeSet, function(error, createdFiles) {
@@ -97,7 +97,7 @@ function run(genes, changeSet) {
 				//Align
 				console.log("Aligning modified genome with " + fastq + "...");
 				var saiFile = path.dirname(fileName) + "/" + path.basename(fileName, ".fa") + ".sai";
-				exec(bwa + " aln -o 2 -n 7 -t " + cores + " " + fileName + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
+				exec(bwa + " aln -o 2 -n 7 -t " + threads + " " + fileName + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
 					if (error) { return callback(error); }
 					console.log("Finished alignment against modified genome.");
 					//Create SAM
@@ -183,7 +183,7 @@ function run(genes, changeSet) {
 
 											console.log("Aligning reference genome with " + fastq + "...");
 											//Align
-											exec(bwa + " aln  -o 2 -n 7 -t " + cores + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
+											exec(bwa + " aln  -o 2 -n 7 -t " + threads + " " + referenceGenome + " " + fastq + " > " + saiFile, function (error, stdout, stderr) {
 												if (error) { return callback(error); }
 												console.log("Finished alignment against reference genome.");
 
@@ -605,7 +605,7 @@ function performVariantCalling(bamFile, changeSet) {
 			//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
 			var SNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_temp_snps.vcf";
 			var snpLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_temp_snps.log";
-			exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + snpLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+			exec(gatk + " -T UnifiedGenotyper -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + snpLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + SNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + threads, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 				if (error) { return callback(error); }
 				console.log("Finished calling first round SNPs.");
 
@@ -647,7 +647,7 @@ function performVariantCalling(bamFile, changeSet) {
 								//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T IndelGenotyperV2 -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -O /output/FOO_indel.txt --verbose -o /output/FOO_indel_statistics.txt
 								var indels = path.dirname(realignedBAM) + "/" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.vcf";
 								var indelLog = path.dirname(bamFile) + "/GATK_" + path.basename(realignedBAM, ".baq.realigned.bam") + "_indels.log";
-								exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -B:indels,VCF " + vcfFile + " -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+								exec(gatk + " -T UnifiedGenotyper -minIndelCnt 3 -l " + settings.gatkLogLevel + " -log " + indelLog + " -dcov " + settings.downSampleToCoverage + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + realignedBAM + " -o " + indels + " -D " + settings.dbSNP + " -glm DINDEL -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -B:indels,VCF " + vcfFile + " -nt " + threads, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 									if (error) { return callback(error); }
 									console.log("Finished calling indels.");
 
@@ -655,7 +655,7 @@ function performVariantCalling(bamFile, changeSet) {
 									//	java -jar /bin/GTK/GenomeAnalysisTK.jar -T UnifiedGenotyper -R /seq/REFERENCE/human_18.fasta -I /output/FOO.sorted.realigned.bam -varout /output/FOO.geli.calls -stand_call_conf 30.0 -stand_emit_conf 10.0 -pl SOLEXA	
 									var trueSNPFile = path.dirname(baqBAM) + "/" + path.basename(baqBAM, ".baq.bam") + "_snps.vcf";
 									var trueSNPLog = path.dirname(bamFile) + "/GATK_" + path.basename(baqBAM, ".baq.bam") + "_snps.log";
-									exec(gatk + " -T UnifiedGenotyper -B:mask,VCF " + indels + " -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + trueSNPLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + trueSNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + cores, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
+									exec(gatk + " -T UnifiedGenotyper -B:mask,VCF " + indels + " -dcov " + settings.downSampleToCoverage + " -l " + settings.gatkLogLevel + " -log " + trueSNPLog + " -R " + referenceGenome + " -L \"" + settings.gatkInterval + "\" -I " + baqBAM + " -D " + settings.dbSNP + " -o " + trueSNPFile + " -A DepthOfCoverage -A AlleleBalance -A SpanningDeletions -nt " + threads, {maxBuffer: 10000000*1024}, function(error, stdout, stderr) {
 										if (error) { return callback(error); }
 										console.log("Finished calling SNPs.");
 				
