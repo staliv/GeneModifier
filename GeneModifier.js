@@ -250,7 +250,7 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 					bytesRead += change.length;
 					break;
 				case 'D':
-//					console.debug("Delete " + changeValues[1] + " to " + changeValues[2]);
+//					sys.error("Delete " + changeValues[1] + " to " + changeValues[2]);
 					//Read (start - chromosomeInterval.start) - position) bytes from last position in geneFile to output, move position deletion.length bytes forward
 					readLength = (parseFloat(changeValues[1]) - chromosomeInterval.start - bytesRead);
 					if (readLength > 0) {
@@ -259,9 +259,10 @@ function _createMergedGene(genePath, changeSet, chromosomeName, chromosomeInterv
 						output.push(read[0]);
 						position += read[1];
 					}
-					difference = (parseFloat(changeValues[2]) - parseFloat(changeValues[1]));
+					difference = parseFloat(changeValues[2]) - parseFloat(changeValues[1]);
 					position += difference;
 					bytesRead += difference;
+
 					//[start + previousInsertionLengths, previousOffset + (end - start)]
 					offsetDescriptor.push([parseFloat(changeValues[1]) - deletionsLength + insertionsLength, offsetDescriptor[offsetDescriptor.length - 1][1] + difference]);
 					deletionsLength += difference;
