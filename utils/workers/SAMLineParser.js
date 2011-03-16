@@ -17,27 +17,34 @@ worker.onmessage = function (msg) {
     var keys = msg.keys;
 	var count = 0;
 	var newLines = [];
+	var errorLines = [];
 
 	for (var i=0; i < lines.length; i++) {
 				
 		count++;
 
 		//Parse each line
-		parseLine(lines[i].split("\t"), keys, function(modifiedLine) {
-			if (modifiedLine !== "") {
-				newLines.push(modifiedLine);
+		parseLine(lines[i].split("\t"), keys, function(error, modifiedLine) {
+			if (error) { 
+				errorLines.push(modifiedLine + " caused error " + error.message);
+			} else {
+				if (modifiedLine !== "") {
+					newLines.push(modifiedLine);
+				}
 			}
+
 			--count;
 			if (count === 0) {
 				worker.postMessage({
-					out: newLines
+					out: newLines,
+					error: errorLines
 				});
 			}
 		});
 	}
 };
 
-function parseLine(line, keys, next) {
+function parseLine(line, keys, callback) {
 
 	var modifiedLine = [];
 	var key = keys[line[2]];
@@ -55,7 +62,7 @@ function parseLine(line, keys, next) {
 	var SAMPositionZeroBased = (parseFloat(line[3]) - 1);
 	//POS should be backmapped from (modified genome startPosition + position in sam)
 	positionBackMapper.backMap("genes/modified/" + key.gene + "_" + key.changeset + ".fa", key.startPosition + SAMPositionZeroBased, function(error, referencePosition) {
-		if (error) { return callback(error); }
+		if (error) { return callback(error, line.join("\t")); }
 
 		var changes = changesMade(key, referencePosition, line[9].length);
 
@@ -204,7 +211,7 @@ function parseLine(line, keys, next) {
 					});
 				} else {
 */
-				next(modifiedLine.join("\t"));
+				callback(null, modifiedLine.join("\t"));
 //				}
 
 			});			
@@ -272,9 +279,7 @@ function parseLine(line, keys, next) {
 				});
 			} else {
 */
-			next(modifiedLine.join("\t")); //"\n"
-//			}
-//			next(""); //"\n"
+			callback(null, modifiedLine.join("\t")); //"\n"
 
 		}
 	
